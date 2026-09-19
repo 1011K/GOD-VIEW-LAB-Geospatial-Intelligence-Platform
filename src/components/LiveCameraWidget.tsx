@@ -41,6 +41,7 @@ interface LiveCameraWidgetProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenSurveillanceWall?: () => void;
+  onDockSideMap?: () => void;
 }
 
 type TabMode = 'cameras' | 'macro' | 'osint' | 'hazards';
@@ -55,8 +56,10 @@ export function LiveCameraWidget({
   onSelectObject,
   isOpen,
   onClose,
-  onOpenSurveillanceWall
+  onOpenSurveillanceWall,
+  onDockSideMap
 }: LiveCameraWidgetProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<TabMode>('cameras');
   const [currentCamIndex, setCurrentCamIndex] = useState(0);
   const [isAutoCycling, setIsAutoCycling] = useState(false);
@@ -66,6 +69,8 @@ export function LiveCameraWidget({
   const [imgError, setImgError] = useState(false);
   const [refreshKey, setRefreshKey] = useState(Date.now());
   const [zuluTime, setZuluTime] = useState('');
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
+  const [camFilterText, setCamFilterText] = useState('');
 
   // Dock Mode with localStorage persistence
   const [dockMode, setDockMode] = useState<CameraDockMode>(() => {
@@ -87,6 +92,15 @@ export function LiveCameraWidget({
     return { x: 16, y: typeof window !== 'undefined' ? window.innerHeight - 460 : 300 };
   });
 
+  // Opacity customization with localStorage persistence
+  const [opacity, setOpacity] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('gv_camera_opacity');
+      if (saved) return parseFloat(saved);
+    } catch {}
+    return 0.95;
+  });
+
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number }>({
     startX: 0,
@@ -95,7 +109,7 @@ export function LiveCameraWidget({
     initialY: typeof window !== 'undefined' ? window.innerHeight - 460 : 300
   });
 
-  // Save dockMode & position
+  // Save dockMode, position, and opacity
   useEffect(() => {
     try {
       localStorage.setItem('gv_camera_dock_mode', dockMode);
@@ -107,6 +121,12 @@ export function LiveCameraWidget({
       localStorage.setItem('gv_camera_pos', JSON.stringify(position));
     } catch {}
   }, [position]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('gv_camera_opacity', opacity.toString());
+    } catch {}
+  }, [opacity]);
 
   const activeCam = cameras[currentCamIndex] || cameras[0];
 
@@ -138,18 +158,33 @@ export function LiveCameraWidget({
     return () => clearInterval(patrolTimer);
   }, [isAutoCycling, cameras.length]);
 
-  // Drag Handlers
+  // Drag Handlers using bounding client rect
   const handlePointerDown = (e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('iframe')) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input') || target.closest('select') || target.closest('iframe') || target.closest('a')) return;
+
+    if (panelRef.current) {
+      const rect = panelRef.current.getBoundingClientRect();
+      const curX = rect.left;
+      const curY = rect.top;
+      setPosition({ x: curX, y: curY });
+      dragStartRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        initialX: curX,
+        initialY: curY
+      };
+    } else {
+      dragStartRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        initialX: position.x,
+        initialY: position.y
+      };
+    }
     setIsDragging(true);
     setDockMode('floating');
-    dragStartRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      initialX: position.x,
-      initialY: position.y
-    };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -166,10 +201,8 @@ export function LiveCameraWidget({
   const handlePointerUp = (e: React.PointerEvent) => {
     setIsDragging(false);
     try {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {
-      // Ignored
-    }
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {}
   };
 
   const resetPosition = () => {
@@ -183,7 +216,14 @@ export function LiveCameraWidget({
       setPosition({ x: 16, y: window.innerHeight - 460 });
     } else if (mode === 'docked-right' || mode === 'side-map') {
       setPosition({ x: Math.max(16, window.innerWidth - 420), y: 80 });
+      if (mode === 'side-map' && onDockSideMap) {
+        onDockSideMap();
+      }
     }
+  };
+
+  const cycleOpacity = () => {
+    setOpacity(prev => prev === 0.95 ? 0.8 : prev === 0.8 ? 0.6 : 0.95);
   };
 
   // Upstream Live Health Probe
@@ -223,18 +263,51 @@ export function LiveCameraWidget({
   if (!isOpen) return null;
 
   // Determine computed container style based on dockMode
-  const containerStyle: React.CSSProperties = dockMode === 'floating'
-    ? { position: 'fixed', left: `${position.x}px`, top: `${position.y}px`, zIndex: 40 }
-    : dockMode === 'docked-left'
-    ? { position: 'fixed', left: '16px', bottom: '16px', zIndex: 40 }
-    : dockMode === 'side-map' || dockMode === 'docked-right'
-    ? { position: 'fixed', right: '16px', top: '80px', zIndex: 40, width: '400px' }
-    : { position: 'fixed', left: `${position.x}px`, top: `${position.y}px`, zIndex: 40 };
+  const containerStyle: React.CSSProperties = {
+    position: 'fixed',
+    zIndex: 40,
+    opacity,
+    transition: isDragging ? 'none' : 'opacity 0.2s ease, transform 0.15s ease',
+    ...(dockMode === 'floating'
+      ? { left: `${position.x}px`, top: `${position.y}px` }
+      : dockMode === 'docked-left'
+      ? { left: '16px', bottom: '16px' }
+      : dockMode === 'side-map' || dockMode === 'docked-right'
+      ? { right: '16px', top: '80px', width: '400px' }
+      : { left: `${position.x}px`, top: `${position.y}px` })
+  };
+
+  if (isMinimized) {
+    return (
+      <div
+        ref={panelRef}
+        style={containerStyle}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-950/90 border border-cyan-500/50 text-cyan-300 font-mono text-xs shadow-2xl backdrop-blur-xl cursor-grab active:cursor-grabbing select-none"
+      >
+        <GripHorizontal className="w-3.5 h-3.5 text-cyan-500" />
+        <Video className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+        <span className="font-bold uppercase tracking-wider text-[10px]">
+          HUD • {activeCam ? activeCam.region : 'CAM'}
+        </span>
+        <button
+          onClick={() => setIsMinimized(false)}
+          className="p-0.5 rounded hover:bg-cyan-500/20 text-cyan-300 transition-colors"
+          title="Expand Surveillance HUD"
+        >
+          <Maximize2 className="w-3 h-3" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
+      ref={panelRef}
       style={containerStyle}
-      className={`w-96 max-w-[calc(100vw-2rem)] bg-slate-950/95 border border-cyan-500/50 rounded-2xl shadow-[0_15px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl font-mono text-xs flex flex-col transition-all duration-150 select-none ${
+      className={`w-96 max-w-[calc(100vw-2rem)] bg-slate-950/95 border border-cyan-500/50 rounded-2xl shadow-[0_15px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl font-mono text-xs flex flex-col select-none ${
         isDragging ? 'cursor-grabbing scale-[1.01] ring-2 ring-cyan-400/50' : ''
       }`}
     >
@@ -274,10 +347,18 @@ export function LiveCameraWidget({
             onClick={() => setDock(dockMode === 'side-map' ? 'floating' : 'side-map')}
             title="Dock to Side Map (Right Rail)"
             className={`p-1 rounded transition-colors ${
-              dockMode === 'side-map' ? 'bg-cyan-500/30 text-cyan-200' : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800'
+              dockMode === 'side-map' || dockMode === 'docked-right' ? 'bg-cyan-500/30 text-cyan-200' : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800'
             }`}
           >
             <PanelRightClose className="w-3.5 h-3.5" />
+          </button>
+          {/* Opacity Cycle */}
+          <button
+            onClick={cycleOpacity}
+            title={`Opacity: ${Math.round(opacity * 100)}% (Click to toggle)`}
+            className="px-1.5 py-0.5 rounded text-[9px] bg-slate-900 border border-slate-700 text-slate-300 hover:text-cyan-300 transition-colors font-bold"
+          >
+            {Math.round(opacity * 100)}%
           </button>
           {/* Snap Reset */}
           <button
@@ -289,11 +370,11 @@ export function LiveCameraWidget({
           </button>
           {/* Minimize / Expand */}
           <button
-            onClick={() => setIsMinimized(!isMinimized)}
-            title={isMinimized ? 'Expand HUD' : 'Minimize HUD'}
+            onClick={() => setIsMinimized(true)}
+            title="Minimize HUD to Pill"
             className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
           >
-            {isMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
+            <Minimize2 className="w-3.5 h-3.5" />
           </button>
           {/* Close HUD */}
           <button
@@ -365,9 +446,9 @@ export function LiveCameraWidget({
           {/* TAB 1: LIVE SURVEILLANCE CAMERAS */}
           {activeTab === 'cameras' && activeCam && (
             <div className="p-2.5 space-y-2.5">
-              {/* Quick Channel Bar */}
+              {/* Quick Channel Bar & All Cameras Picker */}
               <div className="flex items-center space-x-1 overflow-x-auto pb-1 custom-scrollbar">
-                {cameras.slice(0, 7).map((cam, idx) => (
+                {cameras.slice(0, 5).map((cam, idx) => (
                   <button
                     key={cam.camera_id}
                     onClick={() => {
@@ -385,10 +466,78 @@ export function LiveCameraWidget({
                     <span>CH-0{idx + 1}: {cam.region}</span>
                   </button>
                 ))}
+                <button
+                  onClick={() => setIsSelectorOpen(!isSelectorOpen)}
+                  className={`px-2 py-1 rounded text-[9px] whitespace-nowrap transition-all flex items-center gap-1 font-bold border ${
+                    isSelectorOpen
+                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                      : 'bg-slate-900/80 hover:bg-slate-800 text-cyan-300 border-cyan-500/30'
+                  }`}
+                  title="Browse all 20+ live cameras and global feeds"
+                >
+                  <LayoutGrid className="w-3 h-3 text-cyan-400" />
+                  <span>All ({cameras.length}) {isSelectorOpen ? '▲' : '▼'}</span>
+                </button>
               </div>
+
+              {/* All Cameras Channel Browser Drawer */}
+              {isSelectorOpen && (
+                <div className="p-2 bg-slate-900/95 border border-cyan-500/40 rounded-xl space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                    <span className="text-[10px] text-cyan-300 font-bold uppercase">GLOBAL CAMERA DIRECTORY</span>
+                    <input
+                      type="text"
+                      placeholder="Filter city or country..."
+                      value={camFilterText}
+                      onChange={(e) => setCamFilterText(e.target.value)}
+                      className="px-2 py-0.5 bg-slate-950 border border-slate-700 rounded text-[10px] text-slate-200 w-36 outline-none focus:border-cyan-400"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-1">
+                    {cameras
+                      .map((c, originalIdx) => ({ c, originalIdx }))
+                      .filter(({ c }) => {
+                        if (!camFilterText) return true;
+                        const q = camFilterText.toLowerCase();
+                        return c.name.toLowerCase().includes(q) || c.region.toLowerCase().includes(q) || c.country.toLowerCase().includes(q);
+                      })
+                      .map(({ c, originalIdx }) => (
+                        <button
+                          key={c.camera_id}
+                          onClick={() => {
+                            setCurrentCamIndex(originalIdx);
+                            setIsSelectorOpen(false);
+                            setImgError(false);
+                            setProbeResult(null);
+                          }}
+                          className={`w-full text-left p-1.5 rounded flex items-center justify-between text-[10px] transition-all ${
+                            originalIdx === currentCamIndex
+                              ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-200 font-bold'
+                              : 'hover:bg-slate-800 text-slate-300 border border-transparent'
+                          }`}
+                        >
+                          <div className="truncate pr-2">
+                            <span className="font-semibold text-slate-100">{c.name}</span>
+                            <span className="text-slate-400 block text-[9px]">{c.region}, {c.country}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 flex-shrink-0">
+                            <span className={`text-[8px] px-1 py-0.2 rounded uppercase font-mono ${
+                              c.stream_type === 'youtube' ? 'bg-rose-950 text-rose-300 border border-rose-800' : 'bg-slate-800 text-slate-400'
+                            }`}>
+                              {c.stream_type === 'youtube' ? 'YOUTUBE' : 'CCTV'}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
 
               {/* Video Monitor Frame: supports genuine embedded video streams (YouTube, HLS, IFRAME) or live refreshing CCTV snapshots */}
               <div className="relative aspect-video rounded-xl bg-slate-950 border border-cyan-500/40 overflow-hidden group shadow-inner">
+                {/* Shield mouse events during dragging so iframe does not hijack drag */}
+                {isDragging && <div className="absolute inset-0 z-50 pointer-events-auto bg-transparent" />}
+
                 {/* Live Stream: Video or Image */}
                 {activeCam.stream_type === 'youtube' || activeCam.media_type === 'video' ? (
                   <iframe
@@ -397,7 +546,7 @@ export function LiveCameraWidget({
                     title={activeCam.name}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
-                    className="w-full h-full border-0 pointer-events-auto"
+                    className={`w-full h-full border-0 ${isDragging ? 'pointer-events-none' : 'pointer-events-auto'}`}
                   />
                 ) : !imgError ? (
                   <img

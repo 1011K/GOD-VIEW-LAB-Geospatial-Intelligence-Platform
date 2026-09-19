@@ -159,8 +159,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'Official Caltrans CCTV camera monitoring real-time westbound traffic flow approaching the San Francisco-Oakland Bay Bridge toll gantry.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 2. Caltrans District 7 — Los Angeles I-405 at Sepulveda Pass
+  // 8. Caltrans District 7 — Los Angeles I-405 at Sepulveda Pass
   {
+    id: 'cam-caltrans-sepulveda',
     camera_id: 'cam-caltrans-sepulveda',
     name: 'I-405 San Diego Fwy at Sepulveda Pass',
     provider: 'California Department of Transportation (Caltrans District 7)',
@@ -178,8 +179,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'Caltrans surveillance feed overlooking Interstate 405 through the critical Sepulveda Pass artery in Los Angeles County.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 3. NYSDOT 511 — New York Times Square / 42nd St & Broadway
+  // 9. NYSDOT 511 — New York Times Square / 42nd St & Broadway
   {
+    id: 'cam-nysdot-times-square',
     camera_id: 'cam-nysdot-times-square',
     name: 'Times Square & 7th Avenue / 42nd St Corridor',
     provider: 'New York State Department of Transportation (NYSDOT 511 / NYC DOT)',
@@ -197,8 +199,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'NYC Traffic Management Center public camera monitoring pedestrian and vehicular circulation through Midtown Manhattan.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 4. NYSDOT 511 — George Washington Bridge I-95 Hudson River Crossing
+  // 10. NYSDOT 511 — George Washington Bridge I-95 Hudson River Crossing
   {
+    id: 'cam-nysdot-gwb',
     camera_id: 'cam-nysdot-gwb',
     name: 'George Washington Bridge Upper Level Westbound',
     provider: 'Port Authority of NY & NJ / NYSDOT',
@@ -216,8 +219,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'Busiest motor vehicle bridge in the world carrying I-95 / US-1 across the Hudson River between Manhattan and Fort Lee, NJ.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 5. Transport for London (TfL) — Tower Bridge & A100 JamCam
+  // 11. Transport for London (TfL) — Tower Bridge & A100 JamCam
   {
+    id: 'cam-tfl-tower-bridge',
     camera_id: 'cam-tfl-tower-bridge',
     name: 'Tower Bridge Approach / A100 Corridor',
     provider: 'Transport for London (TfL)',
@@ -235,8 +239,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'Official TfL JamCam live feed monitoring vehicular and maritime bascule movements at Tower Bridge across the River Thames.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 6. Transport for London (TfL) — Westminster Bridge & Parliament Square
+  // 12. Transport for London (TfL) — Westminster Bridge & Parliament Square
   {
+    id: 'cam-tfl-westminster',
     camera_id: 'cam-tfl-westminster',
     name: 'Westminster Bridge & Houses of Parliament',
     provider: 'Transport for London (TfL)',
@@ -254,8 +259,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'TfL JamCam feed overlooking Westminster Bridge and Parliament Square traffic junctions in central London.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 7. Transport for NSW — Sydney Harbour Bridge North Approach
+  // 13. Transport for NSW — Sydney Harbour Bridge North Approach
   {
+    id: 'cam-tfnsw-sydney-bridge',
     camera_id: 'cam-tfnsw-sydney-bridge',
     name: 'Sydney Harbour Bridge Cahill Expressway',
     provider: 'Transport for NSW Live Traffic NSW',
@@ -273,8 +279,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'Government road agency camera monitoring Sydney Harbour Bridge deck and Bradfield Highway circulation in Sydney, Australia.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 8. Panama Canal Authority (ACP) — Miraflores Locks Pacific Transit
+  // 14. Panama Canal Authority (ACP) — Miraflores Locks Pacific Transit
   {
+    id: 'cam-panama-miraflores',
     camera_id: 'cam-panama-miraflores',
     name: 'Panama Canal Miraflores Locks Live Feed',
     provider: 'Autoridad del Canal de Panamá (ACP)',
@@ -292,8 +299,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'Official maritime transit webcam watching Panamax and Neopanamax vessels transiting the Pacific lock chamber.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 9. Panama Canal Authority (ACP) — Gatun Locks Atlantic Transit
+  // 15. Panama Canal Authority (ACP) — Gatun Locks Atlantic Transit
   {
+    id: 'cam-panama-gatun',
     camera_id: 'cam-panama-gatun',
     name: 'Panama Canal Gatun Locks Atlantic Chamber',
     provider: 'Autoridad del Canal de Panamá (ACP)',
@@ -311,8 +319,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'Public canal operations camera overlooking the 3-stage flight of locks lifting vessels between the Atlantic and Lake Gatun.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 10. Tokyo Port & Harbor Bureau — Rainbow Bridge Maritime Transit
+  // 16. Tokyo Port & Harbor Bureau — Rainbow Bridge Maritime Transit
   {
+    id: 'cam-tokyo-rainbow',
     camera_id: 'cam-tokyo-rainbow',
     name: 'Tokyo Bay & Rainbow Bridge Maritime Fairway',
     provider: 'Tokyo Metropolitan Government Port & Harbor Bureau',
@@ -330,8 +339,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'Public municipal camera monitoring navigation channels under the Rainbow Bridge and the Yurikamome transit corridor.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 11. Istanbul Metropolitan Municipality (IBB) — Bosphorus Maritime Strait
+  // 17. Istanbul Metropolitan Municipality (IBB) — Bosphorus Maritime Strait
   {
+    id: 'cam-bosphorus-istanbul',
     camera_id: 'cam-bosphorus-istanbul',
     name: 'Bosphorus 15 July Martyrs Bridge Transit Strait',
     provider: 'Istanbul Metropolitan Municipality (IBB) / Coastal Safety',
@@ -349,8 +359,9 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     description: 'Public transit camera watching maritime tankers and bulk carriers navigating the Bosphorus strait between Europe and Asia.',
     adapter: 'server/transport_camera_adapter'
   },
-  // 12. Colorado DOT (COTrip) — I-70 Eisenhower-Johnson Memorial Tunnel
+  // 18. Colorado DOT (COTrip) — I-70 Eisenhower-Johnson Memorial Tunnel
   {
+    id: 'cam-cdot-eisenhower',
     camera_id: 'cam-cdot-eisenhower',
     name: 'I-70 Eisenhower Tunnel Continental Divide',
     provider: 'Colorado Department of Transportation (CDOT)',
@@ -366,6 +377,75 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     status: 'UNKNOWN',
     freshness_seconds: 45,
     description: 'Highest vehicular tunnel in North America carrying Interstate 70 through the Continental Divide at 11,158 feet elevation.',
+    adapter: 'server/transport_camera_adapter'
+  },
+  // 19. Live Video Stream: Panama Canal Miraflores Locks Live HD Stream
+  {
+    id: 'cam-panama-canal-live-video',
+    camera_id: 'cam-panama-canal-live-video',
+    name: 'Panama Canal Miraflores Locks Live Video Feed',
+    provider: 'Panama Canal Authority (ACP) / Live Stream Network',
+    country: 'Panama',
+    region: 'Panama Province',
+    latitude: 8.9972,
+    longitude: -79.5919,
+    media_url: 'https://www.youtube.com/embed/n3W-c0p0z2s?autoplay=1&mute=1&controls=1&enablejsapi=1',
+    media_type: 'video',
+    stream_type: 'youtube',
+    embed_url: 'https://www.youtube.com/embed/n3W-c0p0z2s?autoplay=1&mute=1&controls=1&enablejsapi=1',
+    sourceUrl: 'https://multimedia.panama-canal.com',
+    source_url: 'https://multimedia.panama-canal.com',
+    fetched_at: new Date().toISOString(),
+    last_verified_at: new Date().toISOString(),
+    status: 'UNKNOWN',
+    freshness_seconds: 1,
+    description: 'Continuous high-definition live optical surveillance overlooking Neopanamax vessels transiting the Pacific entrance of the Panama Canal.',
+    adapter: 'server/transport_camera_adapter'
+  },
+  // 20. Live Video Stream: Niagara Falls Live Cam (Horseshoe Falls)
+  {
+    id: 'cam-niagara-falls-live',
+    camera_id: 'cam-niagara-falls-live',
+    name: 'Niagara Falls Horseshoe Falls Live 4K Stream',
+    provider: 'EarthCam / Niagara Parks Commission',
+    country: 'United States',
+    region: 'New York',
+    latitude: 43.0799,
+    longitude: -79.0747,
+    media_url: 'https://www.youtube.com/embed/2_SgD8Pj_3M?autoplay=1&mute=1&controls=1&enablejsapi=1',
+    media_type: 'video',
+    stream_type: 'youtube',
+    embed_url: 'https://www.youtube.com/embed/2_SgD8Pj_3M?autoplay=1&mute=1&controls=1&enablejsapi=1',
+    sourceUrl: 'https://www.earthcam.com',
+    source_url: 'https://www.earthcam.com',
+    fetched_at: new Date().toISOString(),
+    last_verified_at: new Date().toISOString(),
+    status: 'UNKNOWN',
+    freshness_seconds: 1,
+    description: 'Live 4K optical surveillance overlooking the Horseshoe Falls and the US-Canadian international border river gorge.',
+    adapter: 'server/transport_camera_adapter'
+  },
+  // 21. Live Video Stream: Miami Beach Ocean Drive & Art Deco District
+  {
+    id: 'cam-miami-beach-live',
+    camera_id: 'cam-miami-beach-live',
+    name: 'Miami Beach Ocean Drive Live Stream',
+    provider: 'City of Miami Beach / Ocean Drive Association',
+    country: 'United States',
+    region: 'Florida',
+    latitude: 25.7825,
+    longitude: -80.1300,
+    media_url: 'https://www.youtube.com/embed/gfqQ2J4Fw7k?autoplay=1&mute=1&controls=1&enablejsapi=1',
+    media_type: 'video',
+    stream_type: 'youtube',
+    embed_url: 'https://www.youtube.com/embed/gfqQ2J4Fw7k?autoplay=1&mute=1&controls=1&enablejsapi=1',
+    sourceUrl: 'https://www.miamibeachfl.gov',
+    source_url: 'https://www.miamibeachfl.gov',
+    fetched_at: new Date().toISOString(),
+    last_verified_at: new Date().toISOString(),
+    status: 'UNKNOWN',
+    freshness_seconds: 1,
+    description: 'Live optical surveillance along Ocean Drive overlooking South Beach Atlantic beachfront and coastal weather patterns.',
     adapter: 'server/transport_camera_adapter'
   }
 ];

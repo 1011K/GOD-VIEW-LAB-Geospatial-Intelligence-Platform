@@ -186,6 +186,7 @@ export interface CompanyProfile extends DataProvenance {
 }
 
 export type CameraStatus = 'LIVE' | 'STALE' | 'OFFLINE' | 'UNAVAILABLE' | 'UNKNOWN';
+export type PanelDockMode = 'docked-left' | 'docked-right' | 'side-map' | 'floating';
 
 export interface PublicCameraRecord extends DataProvenance {
   id?: string;

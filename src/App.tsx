@@ -37,7 +37,7 @@ import {
   SearchResultItem,
   PhysicalAssetRecord
 } from './types';
-import { Layers, Video } from 'lucide-react';
+import { Layers, Video, Sparkles, X } from 'lucide-react';
 
 export default function App() {
   // Navigation & View Mode State
@@ -95,7 +95,19 @@ export default function App() {
   const [isAiAnalystOpen, setIsAiAnalystOpen] = useState<boolean>(false);
   const [isLayersOpen, setIsLayersOpen] = useState<boolean>(true);
   const [isIntelOpen, setIsIntelOpen] = useState<boolean>(true);
+  const [isSideMapOpen, setIsSideMapOpen] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('gv_side_map_open') === 'true';
+    } catch {}
+    return false;
+  });
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('gv_side_map_open', isSideMapOpen ? 'true' : 'false');
+    } catch {}
+  }, [isSideMapOpen]);
 
   // 1. Fetch ADS-B Flights
   const fetchFlights = useCallback(async () => {
@@ -558,25 +570,83 @@ export default function App() {
               }}
             />
 
-            <TacticalMap
-              baseMap={baseMap}
-              layers={layers}
-              flights={flights}
-              satellites={satellites}
-              earthquakes={filteredEarthquakes}
-              wildfires={wildfires}
-              infrastructure={infrastructure}
-              cameras={cameras}
-              vessels={vessels}
-              companies={companies}
-              news={news}
-              radarMetadata={radarMetadata}
-              radarFramePath={radarFramePath}
-              currentTime={simTime}
-              onSelectObject={setSelectedObject}
-              onSelectCompany={setSelectedCompany}
-              selectedObject={selectedObject}
-            />
+            {/* Tactical Map Canvas with Side Map Split Support */}
+            <div className="relative w-full h-full flex flex-col md:flex-row overflow-hidden divide-y md:divide-y-0 md:divide-x divide-cyan-500/30">
+              {/* Primary Tactical Map Pane */}
+              <div className={`h-full relative flex flex-col transition-all duration-300 ${isSideMapOpen ? 'w-full md:w-3/5' : 'w-full'}`}>
+                <TacticalMap
+                  baseMap={baseMap}
+                  layers={layers}
+                  flights={flights}
+                  satellites={satellites}
+                  earthquakes={filteredEarthquakes}
+                  wildfires={wildfires}
+                  infrastructure={infrastructure}
+                  cameras={cameras}
+                  vessels={vessels}
+                  companies={companies}
+                  news={news}
+                  radarMetadata={radarMetadata}
+                  radarFramePath={radarFramePath}
+                  currentTime={simTime}
+                  onSelectObject={setSelectedObject}
+                  onSelectCompany={setSelectedCompany}
+                  selectedObject={selectedObject}
+                />
+              </div>
+
+              {/* Side Map: Satellite Reconnaissance View */}
+              {isSideMapOpen && (
+                <div className="w-full md:w-2/5 h-1/2 md:h-full relative flex flex-col bg-slate-950 animate-in slide-in-from-right duration-200">
+                  <div className="absolute top-3 left-4 z-20 px-2.5 py-1 rounded-lg bg-slate-950/90 border border-emerald-500/40 text-[10px] text-emerald-300 font-mono font-bold uppercase tracking-wider backdrop-blur-md flex items-center justify-between gap-3 shadow-xl">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>SIDE MAP • HIGH-RES SATELLITE RECON</span>
+                    </div>
+                    <button
+                      onClick={() => setIsSideMapOpen(false)}
+                      className="p-0.5 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
+                      title="Close Side Map"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <TacticalMap
+                    baseMap="satellite"
+                    layers={layers}
+                    flights={flights}
+                    satellites={satellites}
+                    earthquakes={filteredEarthquakes}
+                    wildfires={wildfires}
+                    infrastructure={infrastructure}
+                    cameras={cameras}
+                    vessels={vessels}
+                    companies={companies}
+                    news={news}
+                    radarMetadata={radarMetadata}
+                    radarFramePath={radarFramePath}
+                    currentTime={simTime}
+                    onSelectObject={setSelectedObject}
+                    onSelectCompany={setSelectedCompany}
+                    selectedObject={selectedObject}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Side Map Toggle Button (When on Tactical Map) */}
+            <button
+              onClick={() => setIsSideMapOpen(prev => !prev)}
+              className={`absolute top-20 right-4 z-20 flex items-center space-x-2 px-3 py-2 rounded-xl border font-mono text-xs shadow-xl backdrop-blur-md transition-all ${
+                isSideMapOpen
+                  ? 'bg-emerald-950/90 border-emerald-500/60 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                  : 'bg-slate-950/90 border-cyan-500/40 text-cyan-300 hover:bg-slate-900'
+              }`}
+              title="Toggle Side Satellite Reconnaissance Map"
+            >
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="font-bold">{isSideMapOpen ? 'Close Side Map' : 'Side Map'}</span>
+            </button>
 
             {/* Company God View Intelligence Drawer */}
             {selectedCompany && (
@@ -645,6 +715,7 @@ export default function App() {
               sourcesHealth={sourcesHealth}
               isOpen={isLayersOpen}
               onToggleOpen={() => setIsLayersOpen(!isLayersOpen)}
+              onDockSideMap={() => setIsSideMapOpen(true)}
             />
 
             {/* Floating Live Cam HUD Toggle Button (When closed) */}
@@ -669,6 +740,7 @@ export default function App() {
               isOpen={isIntelOpen}
               onClose={() => setIsIntelOpen(false)}
               onOpenSurveillanceWall={() => setViewMode('surveillance-wall')}
+              onDockSideMap={() => setIsSideMapOpen(true)}
             />
           </div>
         )}
