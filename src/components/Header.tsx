@@ -21,6 +21,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { BaseMapType, SourceHealthEntry, ViewMode } from '../types';
+import { SpaceWeatherWidget } from './SpaceWeatherWidget';
 
 interface HeaderProps {
   baseMap: BaseMapType;
@@ -194,6 +195,9 @@ export function Header({
             </button>
           </div>
         )}
+
+        {/* NOAA Space Weather (Argus repo integration) */}
+        <SpaceWeatherWidget />
 
         {/* Global Refresh */}
         <button

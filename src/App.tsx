@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Header } from './components/Header';
 import { TacticalMap } from './components/TacticalMap';
 import { LayerControlPanel } from './components/LayerControlPanel';
-import { IntelFeedPanel } from './components/IntelFeedPanel';
+import { LiveCameraWidget } from './components/LiveCameraWidget';
 import { ObjectDetailDrawer } from './components/ObjectDetailDrawer';
 import { AuditReportModal } from './components/AuditReportModal';
 import { SourceHealthModal } from './components/SourceHealthModal';
@@ -36,7 +36,7 @@ import {
   SearchResultItem,
   PhysicalAssetRecord
 } from './types';
-import { Layers } from 'lucide-react';
+import { Layers, Video } from 'lucide-react';
 
 export default function App() {
   // Navigation & View Mode State
@@ -646,17 +646,27 @@ export default function App() {
               onToggleOpen={() => setIsLayersOpen(!isLayersOpen)}
             />
 
-            {/* Real-Time Intel Stream Feed Panel */}
-            <IntelFeedPanel
+            {/* Floating Live Cam HUD Toggle Button (When closed) */}
+            {!isIntelOpen && (
+              <button
+                onClick={() => setIsIntelOpen(true)}
+                className="absolute bottom-4 left-4 z-20 flex items-center space-x-2 px-3 py-2 rounded-xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 font-mono text-xs shadow-xl backdrop-blur-md hover:bg-slate-900 transition-all"
+              >
+                <Video className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <span className="font-bold">Surveillance Cams ({cameras.length})</span>
+              </button>
+            )}
+
+            {/* Draggable Tactical Surveillance & Multi-Domain Intel HUD */}
+            <LiveCameraWidget
+              cameras={cameras}
+              macro={macro}
+              news={news}
               earthquakes={filteredEarthquakes}
               wildfires={wildfires}
-              news={news}
-              macro={macro}
-              flights={flights}
-              satellites={satellites}
               onSelectObject={setSelectedObject}
               isOpen={isIntelOpen}
-              onToggleOpen={() => setIsIntelOpen(!isIntelOpen)}
+              onClose={() => setIsIntelOpen(false)}
             />
           </div>
         )}
