@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   Plane, 
   Orbit, 
@@ -13,7 +12,11 @@ import {
   Filter,
   CheckCircle,
   AlertCircle,
-  Database
+  Database,
+  Video,
+  Ship,
+  Factory,
+  Zap
 } from 'lucide-react';
 import { LayerToggleState, SourceHealthEntry } from '../types';
 
@@ -27,6 +30,9 @@ interface LayerControlPanelProps {
     wildfires: number;
     news: number;
     infrastructure: number;
+    cameras?: number;
+    vessels?: number;
+    companies?: number;
   };
   minQuakeMag: number;
   setMinQuakeMag: (mag: number) => void;
@@ -287,7 +293,7 @@ export function LayerControlPanel({
                     STATIC BASELINE
                   </span>
                 </div>
-                <div className="text-[10px] text-slate-400">Power, Seaports, Cables & Transit Cams</div>
+                <div className="text-[10px] text-slate-400">Power, Seaports, Cables & Infrastructure</div>
               </div>
             </button>
             <div className="flex items-center space-x-2">
@@ -296,6 +302,99 @@ export function LayerControlPanel({
               </span>
               <button onClick={() => toggleLayer('infrastructure')} className="p-1 hover:text-slate-200">
                 {layers.infrastructure ? <Eye className="w-3.5 h-3.5 text-emerald-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-500" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 6B. Public Traffic & Web Cameras */}
+        <div className={`p-2.5 rounded-lg border transition-all ${
+          layers.cameras ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-100' : 'bg-slate-900/40 border-slate-800/80 text-slate-400'
+        }`}>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => toggleLayer('cameras')}
+              className="flex items-center space-x-2.5 text-left flex-1"
+            >
+              <Video className={`w-4 h-4 ${layers.cameras ? 'text-emerald-400' : 'text-slate-500'}`} />
+              <div>
+                <div className="font-semibold flex items-center gap-1.5">
+                  Public Traffic Cameras
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+                    LIVE
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-400">Government DOTs & Port CCTVs</div>
+              </div>
+            </button>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold text-emerald-300 bg-slate-950/80 px-2 py-0.5 rounded border border-slate-800">
+                {activeCounts.cameras || 12}
+              </span>
+              <button onClick={() => toggleLayer('cameras')} className="p-1 hover:text-slate-200">
+                {layers.cameras ? <Eye className="w-3.5 h-3.5 text-emerald-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-500" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 6C. Marine AIS Vessels */}
+        <div className={`p-2.5 rounded-lg border transition-all ${
+          layers.vessels ? 'bg-blue-950/30 border-blue-500/50 text-blue-100' : 'bg-slate-900/40 border-slate-800/80 text-slate-400'
+        }`}>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => toggleLayer('vessels')}
+              className="flex items-center space-x-2.5 text-left flex-1"
+            >
+              <Ship className={`w-4 h-4 ${layers.vessels ? 'text-blue-400' : 'text-slate-500'}`} />
+              <div>
+                <div className="font-semibold flex items-center gap-1.5">
+                  Marine AIS Vessels
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+                    LIVE AIS
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-400">Cargo, Tankers & Maritime Chokepoints</div>
+              </div>
+            </button>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold text-blue-300 bg-slate-950/80 px-2 py-0.5 rounded border border-slate-800">
+                {activeCounts.vessels || 8}
+              </span>
+              <button onClick={() => toggleLayer('vessels')} className="p-1 hover:text-slate-200">
+                {layers.vessels ? <Eye className="w-3.5 h-3.5 text-blue-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-500" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 6D. Company God View & Assets */}
+        <div className={`p-2.5 rounded-lg border transition-all ${
+          layers.companies ? 'bg-cyan-950/30 border-cyan-500/50 text-cyan-100' : 'bg-slate-900/40 border-slate-800/80 text-slate-400'
+        }`}>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => toggleLayer('companies')}
+              className="flex items-center space-x-2.5 text-left flex-1"
+            >
+              <Factory className={`w-4 h-4 ${layers.companies ? 'text-cyan-400' : 'text-slate-500'}`} />
+              <div>
+                <div className="font-semibold flex items-center gap-1.5">
+                  Company God View
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
+                    VERIFIED
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-400">Physical Assets, Refineries & Plants</div>
+              </div>
+            </button>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold text-cyan-300 bg-slate-950/80 px-2 py-0.5 rounded border border-slate-800">
+                {activeCounts.companies || 6}
+              </span>
+              <button onClick={() => toggleLayer('companies')} className="p-1 hover:text-slate-200">
+                {layers.companies ? <Eye className="w-3.5 h-3.5 text-cyan-400" /> : <EyeOff className="w-3.5 h-3.5 text-slate-500" />}
               </button>
             </div>
           </div>

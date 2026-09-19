@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   ShieldCheck, 
@@ -14,34 +14,51 @@ import {
   Gauge, 
   Radio, 
   Zap, 
-  Globe2,
-  Sparkles,
-  Link as LinkIcon,
-  Video,
-  Anchor
+  Globe2, 
+  Sparkles, 
+  Link as LinkIcon, 
+  Video, 
+  Anchor,
+  Ship,
+  Building2,
+  AlertTriangle
 } from 'lucide-react';
 import { DataProvenance } from '../types';
 
 interface ObjectDetailDrawerProps {
   selectedObject: any | null;
   onClose: () => void;
+  onOpenCompany?: (companyId: string) => void;
 }
 
-export function ObjectDetailDrawer({ selectedObject, onClose }: ObjectDetailDrawerProps) {
+export function ObjectDetailDrawer({ selectedObject, onClose, onOpenCompany }: ObjectDetailDrawerProps) {
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [showRawJson, setShowRawJson] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [cameraImgError, setCameraImgError] = useState(false);
+
+  useEffect(() => {
+    setCameraImgError(false);
+    setAiAnalysis(null);
+  }, [selectedObject]);
 
   if (!selectedObject) return null;
 
   // Calculate deep-link hash for Argos-style object sharing
   const getObjectHash = () => {
+    if (selectedObject.eia_id) return `power=${selectedObject.eia_id}`;
+    if (selectedObject.type === 'nuclear' || selectedObject.type === 'solar' || selectedObject.type === 'hydro' || selectedObject.type === 'thermal' || selectedObject.type === 'wind' || selectedObject.type === 'gas') {
+      return `power=${selectedObject.eia_id || selectedObject.id.replace('power-', '')}`;
+    }
+    if (selectedObject.camera_id) return `camera=${selectedObject.camera_id}`;
+    if (selectedObject.mmsi) return `vessel=${selectedObject.mmsi}`;
+    if (selectedObject.company_id || selectedObject.ticker) return `company=${selectedObject.company_id || selectedObject.ticker}`;
+    if (selectedObject.asset_id) return `asset=${selectedObject.asset_id}`;
     if (selectedObject.icao24) return `flight=${selectedObject.icao24}`;
     if (selectedObject.noradId) return `satellite=${selectedObject.noradId}`;
     if (selectedObject.magnitude !== undefined) return `earthquake=${selectedObject.id}`;
-    if (selectedObject.type === 'nuclear' || selectedObject.type === 'hydro' || selectedObject.type === 'thermal') return `power=${selectedObject.id}`;
     if (selectedObject.type === 'port') return `port=${selectedObject.id}`;
     if (selectedObject.type === 'camera') return `camera=${selectedObject.id}`;
     if (selectedObject.type === 'datacenter') return `company=${selectedObject.id}`;
@@ -328,19 +345,176 @@ export function ObjectDetailDrawer({ selectedObject, onClose }: ObjectDetailDraw
           </div>
         )}
 
-        {/* Infrastructure & Port / Camera Parameters */}
-        {selectedObject.type && (
+        {/* Public Traffic & Web Camera Section (Strict Zero-Fake-Data Fail-Closed) */}
+        {(selectedObject.camera_id || (selectedObject.type === 'camera' && selectedObject.media_url)) && (
+          <div className="p-3 rounded-xl bg-emerald-950/20 border border-emerald-500/30 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center space-x-1.5 text-emerald-300 font-semibold text-[11px]">
+                <Video className="w-3.5 h-3.5 text-emerald-400" />
+                <span>PUBLIC CCTV TELEMETRY</span>
+              </span>
+              <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                cameraImgError 
+                  ? 'bg-rose-950 text-rose-300 border border-rose-500/50' 
+                  : 'bg-emerald-950 text-emerald-300 border border-emerald-500/50'
+              }`}>
+                {cameraImgError ? 'SOURCE UNAVAILABLE' : (selectedObject.status || 'LIVE')}
+              </span>
+            </div>
+
+            {cameraImgError ? (
+              <div className="p-3.5 rounded-lg bg-rose-950/30 border border-rose-500/40 text-rose-200 text-center space-y-1.5 font-mono">
+                <AlertTriangle className="w-5 h-5 mx-auto text-rose-400" />
+                <div className="font-bold text-xs text-rose-300">SOURCE UNAVAILABLE</div>
+                <p className="text-[10px] text-slate-300 leading-normal">
+                  Upstream government camera stream unreachable or rate-limited. Strict Zero-Fake-Data policy forbids displaying synthetic or cached mock media.
+                </p>
+              </div>
+            ) : (
+              <div className="relative rounded-lg overflow-hidden border border-slate-800 bg-black aspect-video flex items-center justify-center group">
+                <img
+                  src={selectedObject.media_url || selectedObject.streamUrl}
+                  alt={selectedObject.name}
+                  onError={() => setCameraImgError(true)}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 text-emerald-400 text-[9px] font-mono border border-emerald-500/40 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  LIVE • {selectedObject.region || selectedObject.country}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              <div className="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-400 block">GOVERNMENT PROVIDER:</span>
+                <span className="text-emerald-300 font-bold truncate block">{selectedObject.provider}</span>
+              </div>
+              <div className="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-400 block">REFRESH INTERVAL:</span>
+                <span className="text-slate-200 font-bold">{selectedObject.freshness_seconds || 30} seconds</span>
+              </div>
+            </div>
+
+            {selectedObject.source_url && (
+              <a
+                href={selectedObject.source_url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center space-x-1.5 w-full py-1.5 rounded bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold transition-all"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Verify Agency Upstream Feed</span>
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Marine AIS Vessel Metrics */}
+        {selectedObject.mmsi && (
+          <div className="p-3 rounded-xl bg-blue-950/20 border border-blue-500/30 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center space-x-1.5 text-blue-300 font-semibold text-[11px]">
+                <Ship className="w-3.5 h-3.5 text-blue-400" />
+                <span>COASTAL AIS VESSEL TELEMETRY</span>
+              </span>
+              <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-950 text-blue-300 border border-blue-500/50">
+                {selectedObject.vessel_type?.toUpperCase()}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              <div className="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-400 block">MMSI IDENTIFIER:</span>
+                <span className="text-blue-300 font-bold">{selectedObject.mmsi}</span>
+              </div>
+              <div className="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-400 block">FLAG REGISTRY:</span>
+                <span className="text-slate-200 font-bold">{selectedObject.flag_country}</span>
+              </div>
+              <div className="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-400 block">SPEED OVER GROUND:</span>
+                <span className="text-emerald-400 font-bold">{selectedObject.speed_knots} kts</span>
+              </div>
+              <div className="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-400 block">TRUE HEADING:</span>
+                <span className="text-blue-300 font-bold">{selectedObject.course_deg}°</span>
+              </div>
+            </div>
+
+            {selectedObject.destination && (
+              <div className="p-2 rounded bg-slate-950/80 border border-slate-800 text-[10px] flex justify-between items-center">
+                <span className="text-slate-400">DESTINATION PORT:</span>
+                <span className="text-cyan-300 font-bold">{selectedObject.destination}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Verified Power Plant & Energy Specifications (Benchmark: EIA 63031 Dominion Gloucester Solar) */}
+        {(selectedObject.eia_id || selectedObject.fuel_type || selectedObject.type === 'solar' || selectedObject.type === 'nuclear' || selectedObject.type === 'hydro' || selectedObject.type === 'thermal' || selectedObject.type === 'wind') && (
+          <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center space-x-1.5 text-amber-300 font-semibold text-[11px]">
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span>POWER GENERATION PROFILE</span>
+              </span>
+              {selectedObject.eia_id && (
+                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-950 text-amber-300 border border-amber-500/40 font-mono">
+                  EIA #{selectedObject.eia_id}
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              <div className="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-400 block">NAMEPLATE CAPACITY:</span>
+                <span className="text-emerald-400 font-bold text-xs">{selectedObject.capacity_mw} MW</span>
+              </div>
+              <div className="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+                <span className="text-slate-400 block">FUEL TYPE:</span>
+                <span className="text-amber-300 font-bold uppercase">{selectedObject.fuel_type || selectedObject.type}</span>
+              </div>
+            </div>
+
+            {selectedObject.grid_interconnection && (
+              <div className="p-2 rounded bg-slate-950/80 border border-slate-800 text-[10px]">
+                <span className="text-slate-400 block">GRID INTERCONNECTION:</span>
+                <span className="text-slate-200 font-semibold">{selectedObject.grid_interconnection}</span>
+              </div>
+            )}
+
+            {selectedObject.company_id && (
+              <div className="pt-1">
+                <a
+                  href={`#company=${selectedObject.company_id}`}
+                  onClick={(e) => {
+                    if (onOpenCompany) {
+                      e.preventDefault();
+                      onOpenCompany(selectedObject.company_id);
+                    }
+                  }}
+                  className="w-full py-1.5 px-2 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/40 text-cyan-300 text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>View Parent Company Dossier ({selectedObject.company_id})</span>
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Infrastructure & Port Parameters */}
+        {selectedObject.type && !selectedObject.camera_id && selectedObject.type !== 'camera' && (
           <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/30 space-y-2">
             <div className="flex items-center space-x-1.5 text-emerald-300 font-semibold text-[11px]">
-              {selectedObject.type === 'camera' ? (
-                <Video className="w-3.5 h-3.5 text-emerald-400" />
-              ) : selectedObject.type === 'port' ? (
+              {selectedObject.type === 'port' ? (
                 <Anchor className="w-3.5 h-3.5 text-cyan-400" />
               ) : (
-                <Zap className="w-3.5 h-3.5" />
+                <Zap className="w-3.5 h-3.5 text-emerald-400" />
               )}
               <span>
-                {selectedObject.type === 'camera' ? 'OFFICIAL GOVERNMENT TRANSPORT CAMERA' : selectedObject.type === 'port' ? 'STRATEGIC MARITIME PORT FACILITY' : 'INFRASTRUCTURE SPECIFICATION'}
+                {selectedObject.type === 'port' ? 'STRATEGIC MARITIME PORT FACILITY' : 'INFRASTRUCTURE SPECIFICATION'}
               </span>
             </div>
 
@@ -366,33 +540,6 @@ export function ObjectDetailDrawer({ selectedObject, onClose }: ObjectDetailDraw
               <p className="text-[10px] text-slate-300 leading-relaxed bg-slate-950/60 p-2 rounded">
                 {selectedObject.details}
               </p>
-            )}
-
-            {/* Live Camera Stream Feed Link if Type is Camera */}
-            {selectedObject.type === 'camera' && (
-              <div className="p-2.5 rounded bg-slate-950 border border-emerald-950/80 space-y-1.5">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    PUBLIC STREAM FEED
-                  </span>
-                  <span className="text-slate-400">NO PRIVATE CCTV</span>
-                </div>
-                <p className="text-[9px] text-slate-400 leading-normal">
-                  In compliance with strict data provenance rules, feeds are sourced exclusively from verified public transport & harbor authorities.
-                </p>
-                {selectedObject.streamUrl && (
-                  <a
-                    href={selectedObject.streamUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-center space-x-1.5 w-full py-1.5 rounded bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold transition-all"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    <span>Open Official Municipal Portal</span>
-                  </a>
-                )}
-              </div>
             )}
           </div>
         )}

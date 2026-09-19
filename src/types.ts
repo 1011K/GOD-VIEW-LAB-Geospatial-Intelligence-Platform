@@ -1,8 +1,9 @@
-export type SourceStatus = 'VERIFIED LIVE' | 'REQUIRES KEY' | 'BROKEN' | 'STATIC DATA' | 'MOCK/DEMO' | 'UNKNOWN' | 'SOURCE UNAVAILABLE';
+export type SourceStatus = 'VERIFIED LIVE' | 'LIVE' | 'STALE' | 'OFFLINE' | 'UNAVAILABLE' | 'SOURCE UNAVAILABLE' | 'REQUIRES KEY' | 'BROKEN' | 'STATIC DATA' | 'MOCK/DEMO' | 'UNKNOWN';
 
 export interface DataProvenance {
   provider: string;
   sourceUrl: string;
+  source_url?: string;
   adapter: string;
   fetched_at: string;
   freshness_seconds?: number;
@@ -116,7 +117,7 @@ export interface WeatherRadarMetadata extends DataProvenance {
 export interface InfrastructureRecord extends DataProvenance {
   id: string;
   name: string;
-  type: 'nuclear' | 'datacenter' | 'subsea_cable' | 'hydro' | 'thermal' | 'spaceport' | 'port' | 'camera';
+  type: 'nuclear' | 'datacenter' | 'subsea_cable' | 'hydro' | 'thermal' | 'spaceport' | 'port' | 'camera' | 'solar' | 'wind' | 'gas' | 'refinery' | 'manufacturing';
   country: string;
   latitude: number;
   longitude: number;
@@ -127,6 +128,124 @@ export interface InfrastructureRecord extends DataProvenance {
   details?: string;
   imageUrl?: string;
   streamUrl?: string;
+  eia_id?: string;
+  fuel_type?: string;
+  company_id?: string;
+  grid_interconnection?: string;
+}
+
+export type ProvenanceClassification = 'VERIFIED' | 'DISPUTED' | 'WITHHELD' | 'REJECTED' | 'EXPERIMENTAL';
+
+export interface PhysicalAssetRecord {
+  asset_id: string;
+  name: string;
+  asset_type: 'refinery' | 'manufacturing' | 'power_plant' | 'datacenter' | 'headquarters' | 'port_terminal' | 'mine' | 'solar_park' | 'wind_farm' | 'office';
+  country: string;
+  region?: string;
+  latitude: number;
+  longitude: number;
+  capacity_metric?: string;
+  capacity_value?: number;
+  ownership_pct: number;
+  provenance: ProvenanceClassification;
+  evidence_source: string;
+  evidence_url: string;
+  operational_status: 'Operational' | 'Under Construction' | 'Planned' | 'Decommissioned';
+  eia_id?: string;
+  grid_interconnect?: string;
+  surrounding_events_count?: number;
+}
+
+export interface CompanyProfile extends DataProvenance {
+  company_id: string;
+  canonical_name: string;
+  ticker: string;
+  exchange: string;
+  sector: string;
+  industry: string;
+  headquarters: {
+    city: string;
+    country: string;
+    latitude: number;
+    longitude: number;
+  };
+  market_cap_usd?: string;
+  description: string;
+  subsidiaries: string[];
+  key_brands: string[];
+  physical_assets: PhysicalAssetRecord[];
+  commodity_exposure: string[];
+  astra_signal: {
+    bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+    confidence: number;
+    summary: string;
+    target_link: string;
+  };
+  fmb_valuation_link: string;
+  technicals_link: string;
+}
+
+export type CameraStatus = 'LIVE' | 'STALE' | 'OFFLINE' | 'UNAVAILABLE' | 'UNKNOWN';
+
+export interface PublicCameraRecord extends DataProvenance {
+  camera_id: string;
+  provider: string;
+  name: string;
+  country: string;
+  region: string;
+  latitude: number;
+  longitude: number;
+  media_url: string;
+  media_type: 'image' | 'mjpeg' | 'hls' | 'stream';
+  source_url?: string;
+  fetched_at: string;
+  last_verified_at: string;
+  status: CameraStatus;
+  freshness_seconds: number;
+  description?: string;
+}
+
+export interface VesselRecord extends DataProvenance {
+  mmsi: string;
+  name: string;
+  callsign?: string;
+  vessel_type: 'Cargo' | 'Tanker' | 'Container' | 'Passenger' | 'Tug' | 'Special Craft' | 'Fishing';
+  latitude: number;
+  longitude: number;
+  speed_knots: number;
+  course_deg: number;
+  destination: string;
+  flag_country: string;
+  status: SourceStatus;
+  raw_identifier?: string;
+}
+
+export interface PowerPlantRecord extends DataProvenance {
+  id: string;
+  eia_id?: string;
+  gppd_idnr?: string;
+  name: string;
+  fuel_type: 'solar' | 'nuclear' | 'hydro' | 'gas' | 'coal' | 'wind' | 'oil';
+  capacity_mw: number;
+  operator: string;
+  country: string;
+  state_province?: string;
+  latitude: number;
+  longitude: number;
+  commissioned_year?: number;
+  grid_interconnection?: string;
+  company_ticker?: string;
+  status_operational: string;
+}
+
+export interface SearchResultItem {
+  id: string;
+  category: 'company' | 'power' | 'camera' | 'flight' | 'vessel' | 'satellite' | 'infrastructure';
+  title: string;
+  subtitle: string;
+  badge: string;
+  coordinates: [number, number];
+  rawObject: any;
 }
 
 export interface NewsIntelligenceRecord extends DataProvenance {
@@ -176,6 +295,9 @@ export interface LayerToggleState {
   wildfires: boolean;
   weatherRadar: boolean;
   infrastructure: boolean;
+  cameras: boolean;
+  vessels: boolean;
+  companies: boolean;
   newsIntel: boolean;
   bitPaths: boolean;
   orbitTracks: boolean;
@@ -183,7 +305,7 @@ export interface LayerToggleState {
   heatmapMode: 'thermal' | 'seismic' | 'aviation';
 }
 
-export type ViewMode = 'tactical-map' | 'analytics' | 'grid-matrix' | 'pass-predictor' | 'ai-analyst';
+export type ViewMode = 'tactical-map' | 'analytics' | 'grid-matrix' | 'pass-predictor' | 'ai-analyst' | 'company-god-view';
 
 export type BaseMapType = 'dark' | 'satellite' | 'terrain' | 'osm';
 
@@ -206,3 +328,4 @@ export interface RepositoryAuditItem {
   key_strengths: string;
   drawbacks_risks: string;
 }
+

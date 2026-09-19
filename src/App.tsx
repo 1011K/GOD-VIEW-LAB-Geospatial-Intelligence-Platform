@@ -13,6 +13,8 @@ import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { LiveGridMatrix } from './components/LiveGridMatrix';
 import { SatellitePassPredictor } from './components/SatellitePassPredictor';
 import { AiAnalystDrawer } from './components/AiAnalystDrawer';
+import { ArgosSearchBar } from './components/ArgosSearchBar';
+import { CompanyIntelligenceDrawer } from './components/CompanyIntelligenceDrawer';
 import { calculateSatellitePosition } from './services/satellitePropagator';
 import { 
   AircraftRecord, 
@@ -27,7 +29,12 @@ import {
   RepositoryAuditItem,
   BaseMapType,
   LayerToggleState,
-  ViewMode
+  ViewMode,
+  PublicCameraRecord,
+  VesselRecord,
+  CompanyProfile,
+  SearchResultItem,
+  PhysicalAssetRecord
 } from './types';
 import { Layers } from 'lucide-react';
 
@@ -42,6 +49,9 @@ export default function App() {
     wildfires: true,
     weatherRadar: false,
     infrastructure: true,
+    cameras: true,
+    vessels: true,
+    companies: true,
     newsIntel: true,
     bitPaths: true,
     orbitTracks: true,
@@ -55,6 +65,10 @@ export default function App() {
   const [earthquakes, setEarthquakes] = useState<EarthquakeRecord[]>([]);
   const [wildfires, setWildfires] = useState<WildfireRecord[]>([]);
   const [infrastructure, setInfrastructure] = useState<InfrastructureRecord[]>([]);
+  const [cameras, setCameras] = useState<PublicCameraRecord[]>([]);
+  const [vessels, setVessels] = useState<VesselRecord[]>([]);
+  const [companies, setCompanies] = useState<CompanyProfile[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<CompanyProfile | null>(null);
   const [news, setNews] = useState<NewsIntelligenceRecord[]>([]);
   const [macro, setMacro] = useState<MacroIndicatorRecord[]>([]);
   const [radarMetadata, setRadarMetadata] = useState<WeatherRadarMetadata | null>(null);
@@ -177,7 +191,58 @@ export default function App() {
     }
   }, []);
 
-  // 6. Fetch GDELT Geopolitical News
+  // 6. Fetch Public Live Web Cameras (Caltrans, NYSDOT, TfL, TfNSW, ACP, MLIT)
+  const fetchCameras = useCallback(async () => {
+    try {
+      const res = await fetch('/api/cameras');
+      if (!res.ok) {
+        console.warn(`Cameras endpoint HTTP ${res.status}`);
+        return;
+      }
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        setCameras(json.data);
+      }
+    } catch (err: any) {
+      console.warn('Cameras ingest notice:', err?.message || err);
+    }
+  }, []);
+
+  // 7. Fetch AIS Marine Vessels
+  const fetchVessels = useCallback(async () => {
+    try {
+      const res = await fetch('/api/vessels');
+      if (!res.ok) {
+        console.warn(`Vessels endpoint HTTP ${res.status}`);
+        return;
+      }
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        setVessels(json.data);
+      }
+    } catch (err: any) {
+      console.warn('Vessels ingest notice:', err?.message || err);
+    }
+  }, []);
+
+  // 8. Fetch Corporate Registries & Physical Asset Holdings
+  const fetchCompanies = useCallback(async () => {
+    try {
+      const res = await fetch('/api/companies');
+      if (!res.ok) {
+        console.warn(`Companies endpoint HTTP ${res.status}`);
+        return;
+      }
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        setCompanies(json.data);
+      }
+    } catch (err: any) {
+      console.warn('Companies ingest notice:', err?.message || err);
+    }
+  }, []);
+
+  // 9. Fetch GDELT Geopolitical News
   const fetchNews = useCallback(async () => {
     try {
       const res = await fetch('/api/news');
@@ -194,7 +259,7 @@ export default function App() {
     }
   }, []);
 
-  // 7. Fetch Macro Indicators
+  // 10. Fetch Macro Indicators
   const fetchMacro = useCallback(async () => {
     try {
       const res = await fetch('/api/macro');
@@ -211,7 +276,7 @@ export default function App() {
     }
   }, []);
 
-  // 8. Fetch Weather Radar Metadata
+  // 11. Fetch Weather Radar Metadata
   const fetchRadar = useCallback(async () => {
     try {
       const res = await fetch('/api/weather/radar');
@@ -231,7 +296,7 @@ export default function App() {
     }
   }, []);
 
-  // 9. Fetch Source Health Status
+  // 12. Fetch Source Health Status
   const fetchHealth = useCallback(async () => {
     try {
       const res = await fetch('/api/sources/health');
@@ -248,7 +313,7 @@ export default function App() {
     }
   }, []);
 
-  // 10. Fetch Repository Audit Matrix
+  // 13. Fetch Repository Audit Matrix
   const fetchAudit = useCallback(async () => {
     try {
       const res = await fetch('/api/audit');
@@ -274,6 +339,9 @@ export default function App() {
       fetchEarthquakes(),
       fetchWildfires(),
       fetchInfrastructure(),
+      fetchCameras(),
+      fetchVessels(),
+      fetchCompanies(),
       fetchNews(),
       fetchMacro(),
       fetchRadar(),
@@ -302,7 +370,7 @@ export default function App() {
     };
   }, [fetchFlights, fetchEarthquakes, fetchHealth, fetchNews]);
 
-  // URL Hash-Based Object Deep Linking (Argos Atlas addressable objects, e.g. #power=npp-kashiwazaki, #port=port-rotterdam)
+  // URL Hash-Based Object Deep Linking (Argos Atlas addressable objects, e.g. #power=63031, #company=RELIANCE, #camera=..., #vessel=...)
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace(/^#/, '');
@@ -311,8 +379,56 @@ export default function App() {
       const [key, value] = hash.split('=');
       if (!key || !value) return;
 
-      // Find in infrastructure
-      if (['power', 'port', 'camera', 'company', 'cable', 'target'].includes(key)) {
+      // 1. Power Plant Deep Linking (Supports EIA Plant ID like 63031 or slug)
+      if (key === 'power') {
+        const found = infrastructure.find(item => 
+          item.id.toLowerCase() === value.toLowerCase() || 
+          item.eia_id === value
+        );
+        if (found) {
+          setSelectedObject(found);
+          return;
+        }
+      }
+
+      // 2. Company Deep Linking (e.g. #company=RELIANCE, #company=TATAPOWER)
+      if (key === 'company') {
+        const foundCompany = companies.find(c => 
+          c.company_id.toLowerCase() === value.toLowerCase() || 
+          c.ticker.toLowerCase() === value.toLowerCase() ||
+          c.canonical_name.toLowerCase().includes(value.toLowerCase())
+        );
+        if (foundCompany) {
+          setSelectedCompany(foundCompany);
+          return;
+        }
+      }
+
+      // 3. Public Camera Deep Linking (e.g. #camera=caltrans-d4-baybridge)
+      if (key === 'camera') {
+        const foundCam = cameras.find(c => 
+          c.camera_id.toLowerCase() === value.toLowerCase()
+        );
+        if (foundCam) {
+          setSelectedObject(foundCam);
+          return;
+        }
+      }
+
+      // 4. Marine AIS Vessel Deep Linking (e.g. #vessel=vessel-ever-given)
+      if (key === 'vessel') {
+        const foundVessel = vessels.find(v => 
+          v.mmsi.toLowerCase() === value.toLowerCase() || 
+          v.name.toLowerCase().includes(value.toLowerCase())
+        );
+        if (foundVessel) {
+          setSelectedObject(foundVessel);
+          return;
+        }
+      }
+
+      // 5. Generic Infrastructure
+      if (['port', 'cable', 'target'].includes(key)) {
         const found = infrastructure.find(item => item.id.toLowerCase() === value.toLowerCase());
         if (found) {
           setSelectedObject(found);
@@ -320,7 +436,7 @@ export default function App() {
         }
       }
 
-      // Find in flights
+      // 6. Flights
       if (key === 'flight') {
         const found = flights.find(f => f.icao24.toLowerCase() === value.toLowerCase() || (f.callsign && f.callsign.toLowerCase().trim() === value.toLowerCase().trim()));
         if (found) {
@@ -329,7 +445,7 @@ export default function App() {
         }
       }
 
-      // Find in satellites
+      // 7. Satellites
       if (key === 'satellite') {
         const found = satellites.find(s => String(s.noradId) === value || (s.id && s.id.toLowerCase() === value.toLowerCase()));
         if (found && found.calculated) {
@@ -338,7 +454,7 @@ export default function App() {
         }
       }
 
-      // Find in earthquakes
+      // 8. Earthquakes
       if (key === 'earthquake') {
         const found = earthquakes.find(e => e.id.toLowerCase() === value.toLowerCase());
         if (found) {
@@ -349,13 +465,12 @@ export default function App() {
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    // Also evaluate when datasets load or update
-    if (infrastructure.length > 0 || flights.length > 0 || earthquakes.length > 0 || satellites.length > 0) {
+    if (infrastructure.length > 0 || companies.length > 0 || cameras.length > 0 || vessels.length > 0 || flights.length > 0 || earthquakes.length > 0 || satellites.length > 0) {
       handleHashChange();
     }
 
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [infrastructure, flights, satellites, earthquakes]);
+  }, [infrastructure, companies, cameras, vessels, flights, satellites, earthquakes]);
 
   // Real-time or Simulated Satellite Propagation Tick
   useEffect(() => {
@@ -427,6 +542,21 @@ export default function App() {
         {/* VIEW 1: TACTICAL MAP */}
         {viewMode === 'tactical-map' && (
           <div className="relative w-full h-full">
+            {/* Floating Argos Atlas Global Search Bar */}
+            <ArgosSearchBar
+              onSelectResult={(result) => {
+                if (result.category === 'company') {
+                  const comp = companies.find(c => c.company_id === result.id || c.ticker === result.id);
+                  if (comp) setSelectedCompany(comp);
+                } else if (result.rawObject) {
+                  setSelectedObject(result.rawObject);
+                }
+              }}
+              onFlyTo={(lat, lon, zoom) => {
+                setSelectedObject({ latitude: lat, longitude: lon, zoom });
+              }}
+            />
+
             <TacticalMap
               baseMap={baseMap}
               layers={layers}
@@ -435,13 +565,38 @@ export default function App() {
               earthquakes={filteredEarthquakes}
               wildfires={wildfires}
               infrastructure={infrastructure}
+              cameras={cameras}
+              vessels={vessels}
+              companies={companies}
               news={news}
               radarMetadata={radarMetadata}
               radarFramePath={radarFramePath}
               currentTime={simTime}
               onSelectObject={setSelectedObject}
+              onSelectCompany={setSelectedCompany}
               selectedObject={selectedObject}
             />
+
+            {/* Company God View Intelligence Drawer */}
+            {selectedCompany && (
+              <CompanyIntelligenceDrawer
+                company={selectedCompany}
+                onClose={() => setSelectedCompany(null)}
+                onFlyToAsset={(asset) => {
+                  setSelectedObject(asset);
+                }}
+                onFlyToHeadquarters={(comp) => {
+                  setSelectedObject({
+                    id: comp.company_id,
+                    name: `${comp.canonical_name} Headquarters`,
+                    latitude: comp.headquarters.latitude,
+                    longitude: comp.headquarters.longitude,
+                    type: 'company_headquarters',
+                    canonical_name: comp.canonical_name
+                  });
+                }}
+              />
+            )}
 
             {/* Timeline Scrubber */}
             <TimelineScrubber
@@ -477,7 +632,10 @@ export default function App() {
                 earthquakes: filteredEarthquakes.length,
                 wildfires: wildfires.length,
                 news: news.length,
-                infrastructure: infrastructure.length
+                infrastructure: infrastructure.length,
+                cameras: cameras.length,
+                vessels: vessels.length,
+                companies: companies.length
               }}
               minQuakeMag={minQuakeMag}
               setMinQuakeMag={setMinQuakeMag}

@@ -9,7 +9,10 @@ import {
   NewsIntelligenceRecord, 
   WeatherRadarMetadata,
   BaseMapType,
-  LayerToggleState
+  LayerToggleState,
+  PublicCameraRecord,
+  VesselRecord,
+  CompanyProfile
 } from '../types';
 import { calculateGroundTrack } from '../services/satellitePropagator';
 
@@ -21,10 +24,14 @@ interface TacticalMapProps {
   earthquakes: EarthquakeRecord[];
   wildfires: WildfireRecord[];
   infrastructure: InfrastructureRecord[];
+  cameras?: PublicCameraRecord[];
+  vessels?: VesselRecord[];
+  companies?: CompanyProfile[];
   news: NewsIntelligenceRecord[];
   radarMetadata: WeatherRadarMetadata | null;
   radarFramePath?: string | null;
   onSelectObject: (obj: any) => void;
+  onSelectCompany?: (company: CompanyProfile) => void;
   selectedObject: any | null;
   currentSimTime?: Date;
   currentTime?: Date;
@@ -86,9 +93,13 @@ export function TacticalMap({
   wildfires,
   infrastructure,
   news,
+  cameras = [],
+  vessels = [],
+  companies = [],
   radarMetadata,
   radarFramePath,
   onSelectObject,
+  onSelectCompany,
   selectedObject,
   currentSimTime = new Date()
 }: TacticalMapProps) {
@@ -107,6 +118,9 @@ export function TacticalMap({
   const earthquakesLayerGroup = useRef<L.LayerGroup>(L.layerGroup());
   const wildfiresLayerGroup = useRef<L.LayerGroup>(L.layerGroup());
   const infrastructureLayerGroup = useRef<L.LayerGroup>(L.layerGroup());
+  const camerasLayerGroup = useRef<L.LayerGroup>(L.layerGroup());
+  const vesselsLayerGroup = useRef<L.LayerGroup>(L.layerGroup());
+  const companiesLayerGroup = useRef<L.LayerGroup>(L.layerGroup());
   const newsLayerGroup = useRef<L.LayerGroup>(L.layerGroup());
 
   // Initialize Leaflet Map
@@ -133,6 +147,9 @@ export function TacticalMap({
     earthquakesLayerGroup.current.addTo(map);
     wildfiresLayerGroup.current.addTo(map);
     infrastructureLayerGroup.current.addTo(map);
+    companiesLayerGroup.current.addTo(map);
+    vesselsLayerGroup.current.addTo(map);
+    camerasLayerGroup.current.addTo(map);
     newsLayerGroup.current.addTo(map);
     flightsLayerGroup.current.addTo(map);
     satellitesLayerGroup.current.addTo(map);
@@ -515,7 +532,7 @@ export function TacticalMap({
     });
   }, [wildfires, layers.wildfires, onSelectObject]);
 
-  // 8. Render Critical Infrastructure (Nuclear, Data Centers, Spaceports)
+  // 8. Render Critical Infrastructure & Power Plants (including EIA 63031 Gloucester Solar)
   useEffect(() => {
     infrastructureLayerGroup.current.clearLayers();
     if (!layers.infrastructure) return;
@@ -527,6 +544,18 @@ export function TacticalMap({
       if (item.type === 'nuclear') {
         iconColor = '#fbbf24';
         symbolPath = '<circle cx="12" cy="12" r="8" fill="#fbbf24" stroke="#451a03" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="#451a03"/>';
+      } else if (item.type === 'solar') {
+        iconColor = '#f59e0b';
+        symbolPath = '<circle cx="12" cy="12" r="5" fill="#f59e0b" stroke="#78350f" stroke-width="1.5"/><line x1="12" y1="1" x2="12" y2="4" stroke="#f59e0b" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="23" stroke="#f59e0b" stroke-width="2"/><line x1="1" y1="12" x2="4" y2="12" stroke="#f59e0b" stroke-width="2"/><line x1="20" y1="12" x2="23" y2="12" stroke="#f59e0b" stroke-width="2"/>';
+      } else if (item.type === 'hydro') {
+        iconColor = '#3b82f6';
+        symbolPath = '<path d="M4 18c4-4 8 0 12-4 2-2 4-2 4-2v6H4v-0z" fill="#3b82f6" stroke="#172554" stroke-width="1.5"/>';
+      } else if (item.type === 'wind') {
+        iconColor = '#06b6d4';
+        symbolPath = '<circle cx="12" cy="12" r="2" fill="#06b6d4"/><line x1="12" y1="12" x2="12" y2="2" stroke="#06b6d4" stroke-width="2"/><line x1="12" y1="12" x2="4" y2="18" stroke="#06b6d4" stroke-width="2"/><line x1="12" y1="12" x2="20" y2="18" stroke="#06b6d4" stroke-width="2"/>';
+      } else if (item.type === 'thermal' || item.type === 'gas') {
+        iconColor = '#f97316';
+        symbolPath = '<rect x="6" y="8" width="12" height="14" fill="#f97316" stroke="#7c2d12" stroke-width="1.5"/><line x1="9" y1="4" x2="9" y2="8" stroke="#f97316" stroke-width="2"/><line x1="15" y1="4" x2="15" y2="8" stroke="#f97316" stroke-width="2"/>';
       } else if (item.type === 'datacenter') {
         iconColor = '#38bdf8';
         symbolPath = '<rect x="4" y="4" width="16" height="16" rx="2" fill="#38bdf8" stroke="#082f49" stroke-width="1.5"/><line x1="8" y1="8" x2="16" y2="8" stroke="#082f49"/><line x1="8" y1="12" x2="16" y2="12" stroke="#082f49"/>';
@@ -546,7 +575,7 @@ export function TacticalMap({
 
       const infraSvg = `
         <div style="display: flex; align-items: center; justify-content: center;">
-          <svg width="20" height="20" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 4px ${iconColor});">
+          <svg width="22" height="22" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 4px ${iconColor});">
             ${symbolPath}
           </svg>
         </div>
@@ -555,16 +584,17 @@ export function TacticalMap({
       const icon = L.divIcon({
         className: 'custom-infra-icon',
         html: infraSvg,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
       });
 
       const marker = L.marker([item.latitude, item.longitude], { icon })
         .bindTooltip(`
           <div style="font-family: monospace; font-size: 11px; padding: 2px;">
             <strong style="color: ${iconColor};">${item.name}</strong><br/>
-            Type: ${item.type.toUpperCase()} | ${item.country}<br/>
+            Type: ${item.type.toUpperCase()}${item.eia_id ? ` (EIA: ${item.eia_id})` : ''} | ${item.country}<br/>
             ${item.capacity_mw ? `Capacity: ${item.capacity_mw} MW<br/>` : ''}
+            ${item.operator ? `Operator: ${item.operator}<br/>` : ''}
             <span style="color: #94a3b8; font-size: 9px;">VERIFIED GEOSPATIAL REGISTRY</span>
           </div>
         `, { direction: 'top', className: 'tactical-map-tooltip' });
@@ -574,15 +604,183 @@ export function TacticalMap({
     });
   }, [infrastructure, layers.infrastructure, onSelectObject]);
 
-  // Center on selected object smoothly
+  // 9. Render Public Traffic & Web Cameras (Caltrans, NYSDOT, TfL, TfNSW, ACP, MLIT)
+  useEffect(() => {
+    camerasLayerGroup.current.clearLayers();
+    if (!layers.cameras || !cameras.length) return;
+
+    cameras.forEach(cam => {
+      const isLive = cam.status === 'LIVE';
+      const camColor = isLive ? '#10b981' : '#f59e0b';
+
+      const camSvg = `
+        <div style="display: flex; align-items: center; justify-content: center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 0 5px ${camColor});">
+            <rect x="2" y="5" width="14" height="14" rx="2" fill="#022c22" stroke="${camColor}" stroke-width="1.5"/>
+            <path d="M16 10l6-3.5v11l-6-3.5v-4z" fill="${camColor}"/>
+            <circle cx="9" cy="12" r="3" fill="${camColor}"/>
+          </svg>
+        </div>
+      `;
+
+      const icon = L.divIcon({
+        className: 'custom-cam-icon',
+        html: camSvg,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      });
+
+      const marker = L.marker([cam.latitude, cam.longitude], { icon })
+        .bindTooltip(`
+          <div style="font-family: monospace; font-size: 11px; padding: 2px;">
+            <strong style="color: ${camColor};">${cam.name}</strong><br/>
+            Provider: ${cam.provider}<br/>
+            Status: <span style="color: ${camColor}; font-weight: bold;">${cam.status}</span><br/>
+            <span style="color: #94a3b8; font-size: 9px;">PUBLIC GOVERNMENT CAM</span>
+          </div>
+        `, { direction: 'top', className: 'tactical-map-tooltip' });
+
+      marker.on('click', () => onSelectObject(cam));
+      camerasLayerGroup.current.addLayer(marker);
+    });
+  }, [cameras, layers.cameras, onSelectObject]);
+
+  // 10. Render Marine AIS Vessels
+  useEffect(() => {
+    vesselsLayerGroup.current.clearLayers();
+    if (!layers.vessels || !vessels.length) return;
+
+    vessels.forEach(v => {
+      const course = v.course_deg || 0;
+      const vesselSvg = `
+        <div style="display: flex; align-items: center; justify-content: center; transform: rotate(${course}deg);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#38bdf8" stroke="#082f49" stroke-width="1.5" style="filter: drop-shadow(0 0 4px #38bdf8);">
+            <polygon points="12 2 4 20 12 16 20 20 12 2"/>
+          </svg>
+        </div>
+      `;
+
+      const icon = L.divIcon({
+        className: 'custom-vessel-icon',
+        html: vesselSvg,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+
+      const marker = L.marker([v.latitude, v.longitude], { icon })
+        .bindTooltip(`
+          <div style="font-family: monospace; font-size: 11px; padding: 2px;">
+            <strong style="color: #38bdf8;">${v.name} (${v.vessel_type})</strong><br/>
+            MMSI: ${v.mmsi} | Speed: ${v.speed_knots} kts<br/>
+            Destination: ${v.destination} | Flag: ${v.flag_country}<br/>
+            <span style="color: #94a3b8; font-size: 9px;">COASTAL TERRESTRIAL AIS</span>
+          </div>
+        `, { direction: 'top', className: 'tactical-map-tooltip' });
+
+      marker.on('click', () => onSelectObject(v));
+      vesselsLayerGroup.current.addLayer(marker);
+    });
+  }, [vessels, layers.vessels, onSelectObject]);
+
+  // 11. Render Company Headquarters & Physical Assets
+  useEffect(() => {
+    companiesLayerGroup.current.clearLayers();
+    if (!layers.companies || !companies.length) return;
+
+    companies.forEach(company => {
+      // Headquarters Marker
+      const hqSvg = `
+        <div style="display: flex; align-items: center; justify-content: center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#06b6d4" stroke="#083344" stroke-width="1.5" style="filter: drop-shadow(0 0 6px #06b6d4);">
+            <rect x="4" y="2" width="16" height="20" rx="2" fill="#0e7490"/>
+            <rect x="7" y="5" width="3" height="3" fill="#67e8f9"/>
+            <rect x="14" y="5" width="3" height="3" fill="#67e8f9"/>
+            <rect x="7" y="11" width="3" height="3" fill="#67e8f9"/>
+            <rect x="14" y="11" width="3" height="3" fill="#67e8f9"/>
+            <rect x="10" y="16" width="4" height="6" fill="#164e63"/>
+          </svg>
+        </div>
+      `;
+
+      const hqIcon = L.divIcon({
+        className: 'custom-hq-icon',
+        html: hqSvg,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      const hqMarker = L.marker([company.headquarters.latitude, company.headquarters.longitude], { icon: hqIcon })
+        .bindTooltip(`
+          <div style="font-family: monospace; font-size: 11px; padding: 2px;">
+            <strong style="color: #22d3ee;">${company.canonical_name} (${company.ticker})</strong><br/>
+            Headquarters: ${company.headquarters.city}<br/>
+            Market Cap: ${company.market_cap_usd || 'N/A'}<br/>
+            <span style="color: #67e8f9; font-size: 9px;">COMPANY GOD VIEW</span>
+          </div>
+        `, { direction: 'top', className: 'tactical-map-tooltip' });
+
+      hqMarker.on('click', () => {
+        if (onSelectCompany) onSelectCompany(company);
+        else onSelectObject(company);
+      });
+      companiesLayerGroup.current.addLayer(hqMarker);
+
+      // Render Each Verified Physical Asset
+      company.physical_assets.forEach(asset => {
+        const assetColor = asset.provenance === 'VERIFIED' ? '#10b981' : '#f59e0b';
+        const assetSvg = `
+          <div style="display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" style="filter: drop-shadow(0 0 5px ${assetColor});">
+              <polygon points="12 2 2 22 22 22" fill="#042f2e" stroke="${assetColor}" stroke-width="2"/>
+              <circle cx="12" cy="14" r="3" fill="${assetColor}"/>
+            </svg>
+          </div>
+        `;
+
+        const assetIcon = L.divIcon({
+          className: 'custom-asset-icon',
+          html: assetSvg,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
+
+        const assetMarker = L.marker([asset.latitude, asset.longitude], { icon: assetIcon })
+          .bindTooltip(`
+            <div style="font-family: monospace; font-size: 11px; padding: 2px;">
+              <strong style="color: ${assetColor};">${asset.name}</strong><br/>
+              Company: ${company.ticker} (${company.canonical_name})<br/>
+              Type: ${asset.asset_type.toUpperCase()} | Ownership: ${asset.ownership_pct}%<br/>
+              Provenance: <span style="color: ${assetColor}; font-weight: bold;">${asset.provenance}</span><br/>
+              <span style="color: #94a3b8; font-size: 9px;">EVIDENCE: ${asset.evidence_source}</span>
+            </div>
+          `, { direction: 'top', className: 'tactical-map-tooltip' });
+
+        assetMarker.on('click', () => {
+          if (onSelectCompany) onSelectCompany(company);
+          onSelectObject(asset);
+        });
+        companiesLayerGroup.current.addLayer(assetMarker);
+      });
+    });
+  }, [companies, layers.companies, onSelectCompany, onSelectObject]);
+
+  // Center on selected object smoothly with high-precision zoom
   useEffect(() => {
     if (!mapRef.current || !selectedObject) return;
     const lat = selectedObject.latitude !== undefined ? selectedObject.latitude : selectedObject.calculated?.latitude;
     const lon = selectedObject.longitude !== undefined ? selectedObject.longitude : selectedObject.calculated?.longitude;
+    
     if (typeof lat === 'number' && typeof lon === 'number') {
-      mapRef.current.flyTo([lat, lon], Math.max(mapRef.current.getZoom(), 6), {
+      let targetZoom = 8;
+      if (selectedObject.eia_id || selectedObject.type === 'solar' || selectedObject.type === 'nuclear' || selectedObject.camera_id || selectedObject.asset_id) {
+        targetZoom = 13; // High-zoom for power plants and cameras like Argos #power=63031
+      } else if (selectedObject.canonical_name) {
+        targetZoom = 6;
+      }
+      
+      mapRef.current.flyTo([lat, lon], Math.max(mapRef.current.getZoom(), targetZoom), {
         animate: true,
-        duration: 1.2
+        duration: 1.5
       });
     }
   }, [selectedObject]);
