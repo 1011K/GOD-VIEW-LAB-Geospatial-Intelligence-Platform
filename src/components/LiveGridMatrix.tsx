@@ -11,7 +11,8 @@ import {
   Newspaper,
   ArrowUpDown,
   Filter,
-  CheckCircle2
+  CheckCircle2,
+  Video
 } from 'lucide-react';
 import { 
   AircraftRecord, 
@@ -19,7 +20,8 @@ import {
   EarthquakeRecord, 
   WildfireRecord, 
   InfrastructureRecord, 
-  NewsIntelligenceRecord 
+  NewsIntelligenceRecord,
+  PublicCameraRecord 
 } from '../types';
 
 interface LiveGridMatrixProps {
@@ -29,11 +31,12 @@ interface LiveGridMatrixProps {
   wildfires: WildfireRecord[];
   infrastructure: InfrastructureRecord[];
   news: NewsIntelligenceRecord[];
+  cameras?: PublicCameraRecord[];
   macro?: any[];
   onSelectObject: (obj: any) => void;
 }
 
-type GridDomain = 'flights' | 'satellites' | 'earthquakes' | 'wildfires' | 'infrastructure' | 'news';
+type GridDomain = 'flights' | 'satellites' | 'earthquakes' | 'wildfires' | 'infrastructure' | 'news' | 'cameras';
 
 export function LiveGridMatrix({
   flights,
@@ -42,6 +45,7 @@ export function LiveGridMatrix({
   wildfires,
   infrastructure,
   news,
+  cameras = [],
   onSelectObject
 }: LiveGridMatrixProps) {
   const [currentDomain, setCurrentDomain] = useState<GridDomain>('flights');
@@ -118,6 +122,18 @@ export function LiveGridMatrix({
         category: n.category,
         published_at: n.published_at,
         provider: n.provider
+      }));
+    } else if (currentDomain === 'cameras') {
+      rows = cameras.map(c => ({
+        id: c.camera_id || c.id,
+        name: c.name,
+        country: c.country,
+        region: c.region,
+        stream_type: c.stream_type || c.media_type,
+        status: c.status,
+        lat: c.latitude,
+        lon: c.longitude,
+        provider: c.provider
       }));
     }
 
@@ -196,6 +212,15 @@ export function LiveGridMatrix({
           >
             <Newspaper className="w-3.5 h-3.5" />
             <span>OSINT ({news.length})</span>
+          </button>
+          <button
+            onClick={() => setCurrentDomain('cameras')}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all ${
+              currentDomain === 'cameras' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Video className="w-3.5 h-3.5" />
+            <span>Surveillance ({cameras.length})</span>
           </button>
         </div>
 
@@ -294,6 +319,17 @@ export function LiveGridMatrix({
                 <th className="p-3 text-right">Inspect</th>
               </tr>
             )}
+            {currentDomain === 'cameras' && (
+              <tr>
+                <th className="p-3">Camera Name</th>
+                <th className="p-3">Region & Country</th>
+                <th className="p-3">Stream Type</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Coordinates</th>
+                <th className="p-3">Government Agency</th>
+                <th className="p-3 text-right">Inspect</th>
+              </tr>
+            )}
           </thead>
 
           <tbody className="divide-y divide-slate-850 text-slate-300 font-mono text-[11px]">
@@ -388,6 +424,37 @@ export function LiveGridMatrix({
                   <td className="p-3 text-slate-400">{new Date(n.published_at).toLocaleString()}</td>
                   <td className="p-3 text-emerald-400">{n.provider}</td>
                   <td className="p-3 text-right text-purple-400"><ChevronRight className="w-4 h-4 ml-auto" /></td>
+                </tr>
+              ))}
+
+            {currentDomain === 'cameras' && cameras
+              .filter(c => !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.region.toLowerCase().includes(search.toLowerCase()) || c.country.toLowerCase().includes(search.toLowerCase()))
+              .map(c => (
+                <tr key={c.camera_id || c.id} className="hover:bg-slate-900/60 cursor-pointer" onClick={() => onSelectObject(c)}>
+                  <td className="p-3 font-bold text-cyan-300 max-w-sm truncate flex items-center gap-2">
+                    <Video className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                    <span>{c.name}</span>
+                  </td>
+                  <td className="p-3 text-slate-400">{c.region}, {c.country}</td>
+                  <td className="p-3">
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                      c.stream_type === 'youtube' || c.media_type === 'video'
+                        ? 'bg-rose-950/80 text-rose-300 border border-rose-800'
+                        : 'bg-slate-800 text-slate-300'
+                    }`}>
+                      {c.stream_type === 'youtube' ? 'LIVE VIDEO' : 'CCTV SNAP'}
+                    </span>
+                  </td>
+                  <td className="p-3">
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                      c.status === 'LIVE' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-slate-800 text-slate-400'
+                    }`}>
+                      {c.status}
+                    </span>
+                  </td>
+                  <td className="p-3 text-slate-400">{c.latitude.toFixed(4)}, {c.longitude.toFixed(4)}</td>
+                  <td className="p-3 text-slate-400 truncate max-w-xs">{c.provider}</td>
+                  <td className="p-3 text-right text-cyan-400"><ChevronRight className="w-4 h-4 ml-auto" /></td>
                 </tr>
               ))}
           </tbody>

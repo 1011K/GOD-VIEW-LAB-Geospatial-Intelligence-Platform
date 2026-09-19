@@ -12,6 +12,7 @@ import { AlertNotificationCenter } from './components/AlertNotificationCenter';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { LiveGridMatrix } from './components/LiveGridMatrix';
 import { SatellitePassPredictor } from './components/SatellitePassPredictor';
+import { SurveillanceWall } from './components/SurveillanceWall';
 import { AiAnalystDrawer } from './components/AiAnalystDrawer';
 import { ArgosSearchBar } from './components/ArgosSearchBar';
 import { CompanyIntelligenceDrawer } from './components/CompanyIntelligenceDrawer';
@@ -667,6 +668,7 @@ export default function App() {
               onSelectObject={setSelectedObject}
               isOpen={isIntelOpen}
               onClose={() => setIsIntelOpen(false)}
+              onOpenSurveillanceWall={() => setViewMode('surveillance-wall')}
             />
           </div>
         )}
@@ -693,6 +695,7 @@ export default function App() {
             wildfires={wildfires}
             infrastructure={infrastructure}
             news={news}
+            cameras={cameras}
             macro={macro}
             onSelectObject={(obj) => {
               setSelectedObject(obj);
@@ -710,6 +713,113 @@ export default function App() {
               setViewMode('tactical-map');
             }}
           />
+        )}
+
+        {/* VIEW 5: DEDICATED TACTICAL SURVEILLANCE WALL */}
+        {viewMode === 'surveillance-wall' && (
+          <SurveillanceWall
+            cameras={cameras}
+            onSelectCamera={(cam) => {
+              setSelectedObject(cam);
+            }}
+            onClose={() => setViewMode('tactical-map')}
+          />
+        )}
+
+        {/* VIEW 6: SIDE-BY-SIDE SPLIT MAP WORKSPACE */}
+        {viewMode === 'split-map' && (
+          <div className="relative w-full h-full flex flex-col md:flex-row overflow-hidden divide-y md:divide-y-0 md:divide-x divide-cyan-500/30">
+            {/* Left Pane: Vector Tactical View */}
+            <div className="w-full md:w-1/2 h-1/2 md:h-full relative flex flex-col">
+              <div className="absolute top-3 left-4 z-20 px-2.5 py-1 rounded-lg bg-slate-950/90 border border-cyan-500/40 text-[10px] text-cyan-300 font-mono font-bold uppercase tracking-wider backdrop-blur-md flex items-center gap-1.5 shadow-xl">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                PANE 1: TACTICAL VECTOR / DARK
+              </div>
+              <TacticalMap
+                baseMap="dark"
+                layers={layers}
+                flights={flights}
+                satellites={satellites}
+                earthquakes={filteredEarthquakes}
+                wildfires={wildfires}
+                infrastructure={infrastructure}
+                cameras={cameras}
+                vessels={vessels}
+                companies={companies}
+                news={news}
+                radarMetadata={radarMetadata}
+                radarFramePath={radarFramePath}
+                currentTime={simTime}
+                onSelectObject={setSelectedObject}
+                onSelectCompany={setSelectedCompany}
+                selectedObject={selectedObject}
+              />
+            </div>
+
+            {/* Right Pane: Satellite Reconnaissance View */}
+            <div className="w-full md:w-1/2 h-1/2 md:h-full relative flex flex-col bg-slate-950">
+              <div className="absolute top-3 left-4 z-20 px-2.5 py-1 rounded-lg bg-slate-950/90 border border-emerald-500/40 text-[10px] text-emerald-300 font-mono font-bold uppercase tracking-wider backdrop-blur-md flex items-center gap-1.5 shadow-xl">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                PANE 2: HIGH-RES SATELLITE RECON
+              </div>
+              <TacticalMap
+                baseMap="satellite"
+                layers={layers}
+                flights={flights}
+                satellites={satellites}
+                earthquakes={filteredEarthquakes}
+                wildfires={wildfires}
+                infrastructure={infrastructure}
+                cameras={cameras}
+                vessels={vessels}
+                companies={companies}
+                news={news}
+                radarMetadata={radarMetadata}
+                radarFramePath={radarFramePath}
+                currentTime={simTime}
+                onSelectObject={setSelectedObject}
+                onSelectCompany={setSelectedCompany}
+                selectedObject={selectedObject}
+              />
+            </div>
+
+            {/* Floating Layer Control switchboard (movable across split view) */}
+            <LayerControlPanel
+              layers={layers}
+              setLayers={setLayers}
+              activeCounts={{
+                flights: flights.length,
+                satellites: satellites.length,
+                earthquakes: filteredEarthquakes.length,
+                wildfires: wildfires.length,
+                news: news.length,
+                infrastructure: infrastructure.length,
+                cameras: cameras.length,
+                vessels: vessels.length,
+                companies: companies.length
+              }}
+              minQuakeMag={minQuakeMag}
+              setMinQuakeMag={setMinQuakeMag}
+              satelliteGroup={satelliteGroup}
+              setSatelliteGroup={setSatelliteGroup}
+              sourcesHealth={sourcesHealth}
+              isOpen={isLayersOpen}
+              onToggleOpen={() => setIsLayersOpen(!isLayersOpen)}
+            />
+
+            {/* Floating Live Cam HUD (movable across split view) */}
+            <LiveCameraWidget
+              cameras={cameras}
+              macro={macro}
+              news={news}
+              earthquakes={filteredEarthquakes}
+              wildfires={wildfires}
+              onSelectObject={setSelectedObject}
+              isOpen={isIntelOpen}
+              onClose={() => setIsIntelOpen(false)}
+              onOpenSurveillanceWall={() => setViewMode('surveillance-wall')}
+            />
+          </div>
         )}
 
         {/* Strict Data Provenance Detail Inspector Drawer */}

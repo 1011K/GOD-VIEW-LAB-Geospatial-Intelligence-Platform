@@ -18,7 +18,10 @@ import {
   AlertCircle,
   Radio,
   RotateCcw,
-  ExternalLink
+  ExternalLink,
+  PanelLeftClose,
+  PanelRightClose,
+  LayoutGrid
 } from 'lucide-react';
 import { 
   PublicCameraRecord, 
@@ -37,9 +40,11 @@ interface LiveCameraWidgetProps {
   onSelectObject: (obj: any) => void;
   isOpen: boolean;
   onClose: () => void;
+  onOpenSurveillanceWall?: () => void;
 }
 
 type TabMode = 'cameras' | 'macro' | 'osint' | 'hazards';
+export type CameraDockMode = 'docked-left' | 'docked-right' | 'side-map' | 'floating';
 
 export function LiveCameraWidget({
   cameras,
@@ -49,7 +54,8 @@ export function LiveCameraWidget({
   wildfires,
   onSelectObject,
   isOpen,
-  onClose
+  onClose,
+  onOpenSurveillanceWall
 }: LiveCameraWidgetProps) {
   const [activeTab, setActiveTab] = useState<TabMode>('cameras');
   const [currentCamIndex, setCurrentCamIndex] = useState(0);
@@ -61,15 +67,46 @@ export function LiveCameraWidget({
   const [refreshKey, setRefreshKey] = useState(Date.now());
   const [zuluTime, setZuluTime] = useState('');
 
-  // Draggable State
-  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: window.innerHeight - 440 });
+  // Dock Mode with localStorage persistence
+  const [dockMode, setDockMode] = useState<CameraDockMode>(() => {
+    try {
+      const saved = localStorage.getItem('gv_camera_dock_mode');
+      if (saved === 'docked-left' || saved === 'docked-right' || saved === 'side-map' || saved === 'floating') {
+        return saved as CameraDockMode;
+      }
+    } catch {}
+    return 'floating';
+  });
+
+  // Draggable State with localStorage persistence
+  const [position, setPosition] = useState<{ x: number; y: number }>(() => {
+    try {
+      const saved = localStorage.getItem('gv_camera_pos');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { x: 16, y: typeof window !== 'undefined' ? window.innerHeight - 460 : 300 };
+  });
+
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number }>({
     startX: 0,
     startY: 0,
     initialX: 16,
-    initialY: window.innerHeight - 440
+    initialY: typeof window !== 'undefined' ? window.innerHeight - 460 : 300
   });
+
+  // Save dockMode & position
+  useEffect(() => {
+    try {
+      localStorage.setItem('gv_camera_dock_mode', dockMode);
+    } catch {}
+  }, [dockMode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('gv_camera_pos', JSON.stringify(position));
+    } catch {}
+  }, [position]);
 
   const activeCam = cameras[currentCamIndex] || cameras[0];
 
@@ -103,8 +140,9 @@ export function LiveCameraWidget({
 
   // Drag Handlers
   const handlePointerDown = (e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('button')) return;
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('iframe')) return;
     setIsDragging(true);
+    setDockMode('floating');
     dragStartRef.current = {
       startX: e.clientX,
       startY: e.clientY,
@@ -119,7 +157,7 @@ export function LiveCameraWidget({
     const deltaX = e.clientX - dragStartRef.current.startX;
     const deltaY = e.clientY - dragStartRef.current.startY;
     
-    const newX = Math.max(8, Math.min(window.innerWidth - 380, dragStartRef.current.initialX + deltaX));
+    const newX = Math.max(8, Math.min(window.innerWidth - 400, dragStartRef.current.initialX + deltaX));
     const newY = Math.max(64, Math.min(window.innerHeight - 100, dragStartRef.current.initialY + deltaY));
     
     setPosition({ x: newX, y: newY });
@@ -135,7 +173,17 @@ export function LiveCameraWidget({
   };
 
   const resetPosition = () => {
-    setPosition({ x: 16, y: window.innerHeight - 440 });
+    setDockMode('floating');
+    setPosition({ x: 16, y: window.innerHeight - 460 });
+  };
+
+  const setDock = (mode: CameraDockMode) => {
+    setDockMode(mode);
+    if (mode === 'docked-left') {
+      setPosition({ x: 16, y: window.innerHeight - 460 });
+    } else if (mode === 'docked-right' || mode === 'side-map') {
+      setPosition({ x: Math.max(16, window.innerWidth - 420), y: 80 });
+    }
   };
 
   // Upstream Live Health Probe
@@ -144,7 +192,8 @@ export function LiveCameraWidget({
     setIsProbing(true);
     const start = performance.now();
     try {
-      const res = await fetch(`/api/cameras/check-status?camera_id=${encodeURIComponent(activeCam.camera_id)}`);
+      const probeTarget = activeCam.camera_id || activeCam.id || '';
+      const res = await fetch(`/api/cameras/check-status?camera_id=${encodeURIComponent(probeTarget)}`);
       const elapsed = Math.round(performance.now() - start);
       if (res.ok) {
         const json = await res.json();
@@ -173,14 +222,18 @@ export function LiveCameraWidget({
 
   if (!isOpen) return null;
 
+  // Determine computed container style based on dockMode
+  const containerStyle: React.CSSProperties = dockMode === 'floating'
+    ? { position: 'fixed', left: `${position.x}px`, top: `${position.y}px`, zIndex: 40 }
+    : dockMode === 'docked-left'
+    ? { position: 'fixed', left: '16px', bottom: '16px', zIndex: 40 }
+    : dockMode === 'side-map' || dockMode === 'docked-right'
+    ? { position: 'fixed', right: '16px', top: '80px', zIndex: 40, width: '400px' }
+    : { position: 'fixed', left: `${position.x}px`, top: `${position.y}px`, zIndex: 40 };
+
   return (
     <div
-      style={{
-        position: 'fixed',
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        zIndex: 40
-      }}
+      style={containerStyle}
       className={`w-96 max-w-[calc(100vw-2rem)] bg-slate-950/95 border border-cyan-500/50 rounded-2xl shadow-[0_15px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl font-mono text-xs flex flex-col transition-all duration-150 select-none ${
         isDragging ? 'cursor-grabbing scale-[1.01] ring-2 ring-cyan-400/50' : ''
       }`}
@@ -201,11 +254,32 @@ export function LiveCameraWidget({
             </span>
           </div>
           <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 border border-cyan-700 text-cyan-300 font-bold">
-            DRAGGABLE
+            {dockMode === 'side-map' ? 'SIDE MAP' : dockMode === 'docked-right' ? 'RIGHT' : dockMode === 'docked-left' ? 'LEFT' : 'FLOAT'}
           </span>
         </div>
 
         <div className="flex items-center space-x-1">
+          {/* Dock Left */}
+          <button
+            onClick={() => setDock(dockMode === 'docked-left' ? 'floating' : 'docked-left')}
+            title="Dock to Bottom-Left"
+            className={`p-1 rounded transition-colors ${
+              dockMode === 'docked-left' ? 'bg-cyan-500/30 text-cyan-200' : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800'
+            }`}
+          >
+            <PanelLeftClose className="w-3.5 h-3.5" />
+          </button>
+          {/* Dock Side Map / Right */}
+          <button
+            onClick={() => setDock(dockMode === 'side-map' ? 'floating' : 'side-map')}
+            title="Dock to Side Map (Right Rail)"
+            className={`p-1 rounded transition-colors ${
+              dockMode === 'side-map' ? 'bg-cyan-500/30 text-cyan-200' : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800'
+            }`}
+          >
+            <PanelRightClose className="w-3.5 h-3.5" />
+          </button>
+          {/* Snap Reset */}
           <button
             onClick={resetPosition}
             title="Snap Back to Default Position"
@@ -213,6 +287,7 @@ export function LiveCameraWidget({
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
+          {/* Minimize / Expand */}
           <button
             onClick={() => setIsMinimized(!isMinimized)}
             title={isMinimized ? 'Expand HUD' : 'Minimize HUD'}
@@ -220,6 +295,7 @@ export function LiveCameraWidget({
           >
             {isMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
           </button>
+          {/* Close HUD */}
           <button
             onClick={onClose}
             title="Close HUD"
@@ -311,10 +387,19 @@ export function LiveCameraWidget({
                 ))}
               </div>
 
-              {/* Video Monitor Frame */}
+              {/* Video Monitor Frame: supports genuine embedded video streams (YouTube, HLS, IFRAME) or live refreshing CCTV snapshots */}
               <div className="relative aspect-video rounded-xl bg-slate-950 border border-cyan-500/40 overflow-hidden group shadow-inner">
-                {/* Live Stream Image */}
-                {!imgError ? (
+                {/* Live Stream: Video or Image */}
+                {activeCam.stream_type === 'youtube' || activeCam.media_type === 'video' ? (
+                  <iframe
+                    key={activeCam.camera_id}
+                    src={activeCam.embed_url || activeCam.media_url}
+                    title={activeCam.name}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0 pointer-events-auto"
+                  />
+                ) : !imgError ? (
                   <img
                     key={`${activeCam.camera_id}-${refreshKey}`}
                     src={`${activeCam.media_url}${activeCam.media_url.includes('?') ? '&' : '?'}_t=${refreshKey}`}
@@ -337,28 +422,41 @@ export function LiveCameraWidget({
                 )}
 
                 {/* CCTV Tactical Overlay Elements */}
-                <div className="absolute top-2 left-2 flex items-center space-x-1.5 px-2 py-0.5 rounded bg-slate-950/80 border border-cyan-500/30 text-[9px] text-cyan-300 backdrop-blur-sm">
+                <div className="absolute top-2 left-2 flex items-center space-x-1.5 px-2 py-0.5 rounded bg-slate-950/80 border border-cyan-500/30 text-[9px] text-cyan-300 backdrop-blur-sm pointer-events-none">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                  <span className="font-bold">LIVE FEED</span>
+                  <span className="font-bold">{activeCam.stream_type === 'youtube' ? 'LIVE VIDEO' : 'LIVE CCTV'}</span>
                   <span className="text-slate-400">|</span>
                   <span>{activeCam.region}</span>
                 </div>
 
-                <div className="absolute top-2 right-2 flex items-center space-x-1 px-2 py-0.5 rounded bg-slate-950/80 border border-cyan-500/30 text-[9px] text-slate-300 backdrop-blur-sm">
-                  <span className="text-slate-400">{activeCam.freshness_seconds}s interval</span>
+                <div className="absolute top-2 right-2 flex items-center space-x-1 px-2 py-0.5 rounded bg-slate-950/80 border border-cyan-500/30 text-[9px] text-slate-300 backdrop-blur-sm pointer-events-none">
+                  <span className="text-slate-400">{activeCam.freshness_seconds <= 1 ? 'Continuous Stream' : `${activeCam.freshness_seconds}s interval`}</span>
                 </div>
 
                 <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2 py-1 rounded bg-slate-950/85 border border-slate-800 text-[9px] text-slate-300 backdrop-blur-sm">
                   <div className="truncate pr-2 font-medium">
                     {activeCam.name}
                   </div>
-                  <button
-                    onClick={() => onSelectObject(activeCam)}
-                    className="text-cyan-400 hover:text-cyan-200 font-bold flex items-center gap-0.5 flex-shrink-0"
-                  >
-                    <MapPin className="w-3 h-3" />
-                    <span>FLY TO</span>
-                  </button>
+                  <div className="flex items-center space-x-1.5 flex-shrink-0">
+                    {activeCam.source_url && (
+                      <a
+                        href={activeCam.source_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Open upstream source stream in new tab"
+                        className="text-slate-400 hover:text-cyan-300"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                    <button
+                      onClick={() => onSelectObject(activeCam)}
+                      className="text-cyan-400 hover:text-cyan-200 font-bold flex items-center gap-0.5"
+                    >
+                      <MapPin className="w-3 h-3" />
+                      <span>FLY TO</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -385,13 +483,24 @@ export function LiveCameraWidget({
                   <span>{isAutoCycling ? 'STOP PATROL' : 'PATROL MODE'}</span>
                 </button>
 
-                <button
-                  onClick={() => setRefreshKey(Date.now())}
-                  className="px-2 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center gap-1 transition-all"
-                >
-                  <RefreshCw className="w-3 h-3 text-slate-400" />
-                  <span>REFRESH</span>
-                </button>
+                {onOpenSurveillanceWall ? (
+                  <button
+                    onClick={onOpenSurveillanceWall}
+                    className="px-2 py-1.5 rounded-lg bg-indigo-950/80 hover:bg-indigo-900/90 border border-indigo-500/40 text-indigo-300 font-bold text-[10px] flex items-center justify-center gap-1 transition-all shadow-sm"
+                    title="Open 2x2 / 3x3 Live Video Surveillance Wall"
+                  >
+                    <LayoutGrid className="w-3 h-3 text-indigo-400" />
+                    <span>CAM WALL</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setRefreshKey(Date.now())}
+                    className="px-2 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center gap-1 transition-all"
+                  >
+                    <RefreshCw className="w-3 h-3 text-slate-400" />
+                    <span>REFRESH</span>
+                  </button>
+                )}
               </div>
 
               {/* Health Probe Report (if probed) */}

@@ -162,6 +162,32 @@ export function Header({
           <Compass className="w-3.5 h-3.5" />
           <span>Pass Predictor</span>
         </button>
+
+        <button
+          onClick={() => setViewMode('surveillance-wall')}
+          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
+            viewMode === 'surveillance-wall' 
+              ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold shadow-sm' 
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+          title="Tactical Multi-Camera Matrix & Surveillance Wall"
+        >
+          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+          <span>Cam Wall</span>
+        </button>
+
+        <button
+          onClick={() => setViewMode('split-map')}
+          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
+            viewMode === 'split-map' 
+              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold shadow-sm' 
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+          title="Side-by-Side Split Map Dual Projection"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Split Map</span>
+        </button>
       </div>
 
       {/* Right Actions, Alerts & AI */}

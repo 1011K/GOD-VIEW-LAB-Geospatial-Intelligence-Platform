@@ -415,6 +415,16 @@ export function ObjectDetailDrawer({ selectedObject, onClose, onOpenCompany }: O
                   Upstream government camera stream unreachable or rate-limited. Strict Zero-Fake-Data policy forbids displaying synthetic or cached mock media.
                 </p>
               </div>
+            ) : selectedObject.stream_type === 'youtube' || selectedObject.media_type === 'video' ? (
+              <div className="relative rounded-lg overflow-hidden border border-slate-800 bg-black aspect-video flex items-center justify-center group">
+                <iframe
+                  src={selectedObject.embed_url || selectedObject.media_url}
+                  title={selectedObject.name}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full border-0"
+                />
+              </div>
             ) : (
               <div className="relative rounded-lg overflow-hidden border border-slate-800 bg-black aspect-video flex items-center justify-center group">
                 <img

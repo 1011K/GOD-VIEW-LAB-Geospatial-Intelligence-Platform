@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plane, 
   Orbit, 
@@ -16,7 +17,14 @@ import {
   Video,
   Ship,
   Factory,
-  Zap
+  Zap,
+  GripHorizontal,
+  RotateCcw,
+  PanelLeftClose,
+  PanelRightClose,
+  Maximize2,
+  Minimize2,
+  X
 } from 'lucide-react';
 import { LayerToggleState, SourceHealthEntry } from '../types';
 
@@ -43,6 +51,8 @@ interface LayerControlPanelProps {
   onToggleOpen: () => void;
 }
 
+export type DockMode = 'docked-left' | 'docked-right' | 'floating';
+
 export function LayerControlPanel({
   layers,
   setLayers,
@@ -55,6 +65,86 @@ export function LayerControlPanel({
   isOpen,
   onToggleOpen
 }: LayerControlPanelProps) {
+  // Docking & Position state with localStorage persistence
+  const [dockMode, setDockMode] = useState<DockMode>(() => {
+    try {
+      const saved = localStorage.getItem('gv_layer_dock_mode');
+      if (saved === 'docked-left' || saved === 'docked-right' || saved === 'floating') return saved;
+    } catch {}
+    return 'docked-left';
+  });
+
+  const [position, setPosition] = useState<{ x: number; y: number }>(() => {
+    try {
+      const saved = localStorage.getItem('gv_layer_pos');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { x: 16, y: 80 };
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+
+  const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number }>({
+    startX: 0,
+    startY: 0,
+    initialX: 16,
+    initialY: 80
+  });
+
+  // Save dockMode & position
+  useEffect(() => {
+    try {
+      localStorage.setItem('gv_layer_dock_mode', dockMode);
+    } catch {}
+  }, [dockMode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('gv_layer_pos', JSON.stringify(position));
+    } catch {}
+  }, [position]);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).closest('input') || (e.target as HTMLElement).closest('select')) return;
+    setIsDragging(true);
+    setDockMode('floating');
+    dragStartRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: dockMode === 'docked-left' ? 16 : dockMode === 'docked-right' ? window.innerWidth - 340 : position.x,
+      initialY: position.y
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - dragStartRef.current.startX;
+    const deltaY = e.clientY - dragStartRef.current.startY;
+
+    const newX = Math.max(8, Math.min(window.innerWidth - 340, dragStartRef.current.initialX + deltaX));
+    const newY = Math.max(64, Math.min(window.innerHeight - 120, dragStartRef.current.initialY + deltaY));
+
+    setPosition({ x: newX, y: newY });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    setIsDragging(false);
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
+  const resetDock = (mode: DockMode) => {
+    setDockMode(mode);
+    if (mode === 'docked-left') {
+      setPosition({ x: 16, y: 80 });
+    } else if (mode === 'docked-right') {
+      setPosition({ x: Math.max(16, window.innerWidth - 340), y: 80 });
+    }
+  };
+
   const toggleLayer = (key: keyof LayerToggleState) => {
     setLayers(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -64,27 +154,79 @@ export function LayerControlPanel({
     return s?.status || 'VERIFIED LIVE';
   };
 
+  if (!isOpen) return null;
+
+  // Determine computed container style based on dockMode
+  const containerStyle: React.CSSProperties = dockMode === 'floating'
+    ? { position: 'fixed', left: `${position.x}px`, top: `${position.y}px`, zIndex: 25 }
+    : dockMode === 'docked-right'
+    ? { position: 'fixed', right: '16px', top: '80px', zIndex: 25 }
+    : { position: 'fixed', left: '16px', top: '80px', zIndex: 25 };
+
   return (
     <aside 
-      className={`absolute top-20 left-4 z-20 w-80 bg-slate-950/90 border border-cyan-950/70 rounded-xl shadow-2xl backdrop-blur-md transition-all duration-300 font-mono text-xs ${
-        isOpen ? 'translate-x-0 opacity-100' : '-translate-x-[340px] opacity-0 pointer-events-none'
+      style={containerStyle}
+      className={`w-80 max-w-[calc(100vw-2rem)] bg-slate-950/95 border border-cyan-500/50 rounded-2xl shadow-[0_15px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl font-mono text-xs flex flex-col transition-all duration-150 select-none ${
+        isDragging ? 'cursor-grabbing scale-[1.01] ring-2 ring-cyan-400/50' : ''
       }`}
     >
-      {/* Panel Header */}
-      <div className="flex items-center justify-between px-3.5 py-3 border-b border-cyan-950/60 bg-slate-900/60 rounded-t-xl">
+      {/* Draggable Panel Header Bar */}
+      <div 
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        className="px-3 py-2.5 border-b border-cyan-500/30 bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/50 rounded-t-2xl flex items-center justify-between cursor-grab active:cursor-grabbing"
+      >
         <div className="flex items-center space-x-2">
-          <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
-          <span className="font-bold text-slate-100 uppercase tracking-wider font-['Chakra_Petch']">
+          <GripHorizontal className="w-4 h-4 text-cyan-400" />
+          <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="font-bold text-slate-100 uppercase tracking-wider font-['Chakra_Petch'] text-[11px]">
             Geospatial Layers
           </span>
+          <span className="text-[9px] px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-700 font-bold">
+            {dockMode === 'floating' ? 'FLOAT' : dockMode === 'docked-right' ? 'RIGHT' : 'LEFT'}
+          </span>
         </div>
-        <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
-          7 DOMAINS
-        </span>
+
+        {/* Action Buttons: Dock Left, Dock Right, Float/Snap, Minimize, Close */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => resetDock(dockMode === 'docked-left' ? 'floating' : 'docked-left')}
+            title="Dock to Left Rail"
+            className={`p-1 rounded transition-colors ${
+              dockMode === 'docked-left' ? 'bg-cyan-500/30 text-cyan-200' : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800'
+            }`}
+          >
+            <PanelLeftClose className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => resetDock(dockMode === 'docked-right' ? 'floating' : 'docked-right')}
+            title="Dock to Right Rail (Side Map)"
+            className={`p-1 rounded transition-colors ${
+              dockMode === 'docked-right' ? 'bg-cyan-500/30 text-cyan-200' : 'text-slate-400 hover:text-cyan-300 hover:bg-slate-800'
+            }`}
+          >
+            <PanelRightClose className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            title={isMinimized ? 'Expand Layers' : 'Minimize Layers'}
+            className="p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+          >
+            {isMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={onToggleOpen}
+            title="Close Layers Panel"
+            className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-950/60 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
-      {/* Layer List */}
-      <div className="p-3 space-y-2.5 max-h-[calc(100vh-180px)] overflow-y-auto custom-scrollbar">
+      {!isMinimized && (
+        <div className="p-3 space-y-2.5 max-h-[calc(100vh-180px)] overflow-y-auto custom-scrollbar">
         {/* 1. ADS-B Aircraft Layer */}
         <div className={`p-2.5 rounded-lg border transition-all ${
           layers.aircraft ? 'bg-cyan-950/20 border-cyan-500/40 text-cyan-100' : 'bg-slate-900/40 border-slate-800/80 text-slate-400'
@@ -524,6 +666,7 @@ export function LayerControlPanel({
           )}
         </div>
       </div>
+      )}
     </aside>
   );
 }

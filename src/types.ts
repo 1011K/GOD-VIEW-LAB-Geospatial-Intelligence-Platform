@@ -188,6 +188,7 @@ export interface CompanyProfile extends DataProvenance {
 export type CameraStatus = 'LIVE' | 'STALE' | 'OFFLINE' | 'UNAVAILABLE' | 'UNKNOWN';
 
 export interface PublicCameraRecord extends DataProvenance {
+  id?: string;
   camera_id: string;
   provider: string;
   name: string;
@@ -196,7 +197,9 @@ export interface PublicCameraRecord extends DataProvenance {
   latitude: number;
   longitude: number;
   media_url: string;
-  media_type: 'image' | 'mjpeg' | 'hls' | 'stream';
+  media_type: 'image' | 'mjpeg' | 'hls' | 'stream' | 'video';
+  stream_type?: 'image' | 'mjpeg' | 'hls' | 'youtube' | 'iframe';
+  embed_url?: string;
   source_url?: string;
   fetched_at: string;
   last_verified_at: string;
@@ -305,7 +308,7 @@ export interface LayerToggleState {
   heatmapMode: 'thermal' | 'seismic' | 'aviation';
 }
 
-export type ViewMode = 'tactical-map' | 'analytics' | 'grid-matrix' | 'pass-predictor' | 'ai-analyst' | 'company-god-view';
+export type ViewMode = 'tactical-map' | 'analytics' | 'grid-matrix' | 'pass-predictor' | 'ai-analyst' | 'company-god-view' | 'surveillance-wall' | 'split-map';
 
 export type BaseMapType = 'dark' | 'satellite' | 'terrain' | 'osm';
 
