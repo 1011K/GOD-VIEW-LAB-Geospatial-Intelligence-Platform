@@ -15,8 +15,7 @@ export const COMPANIES_DATA: CompanyProfile[] = [
       latitude: 18.9510,
       longitude: 72.8420
     },
-    market_cap_usd: '$240 Billion',
-    description: 'India largest private sector enterprise spanning global energy refining, petrochemicals, telecommunications (Jio 5G), digital services, retail, and renewable giga-complexes.',
+    description: 'India largest private sector enterprise spanning energy refining, petrochemicals, telecommunications (Jio), digital services, and retail.',
     subsidiaries: [
       'Jio Platforms Limited',
       'Reliance Retail Ventures',
@@ -26,19 +25,13 @@ export const COMPANIES_DATA: CompanyProfile[] = [
     ],
     key_brands: ['Jio', 'Reliance Trends', 'Reliance Fresh', 'Campa', 'Hamleys'],
     commodity_exposure: ['Crude Oil (Brent/Dubai)', 'Petrochemicals (PX, PTA, MEG)', 'Natural Gas (KG-D6)', 'Solar Polysilicon'],
-    astra_signal: {
-      bias: 'BULLISH',
-      confidence: 87,
-      summary: 'High refining crack margins, petrochemical volume resilience, and expanding Jio ARPU drive strong free cash flow generation.',
-      target_link: '/astra/signals/RELIANCE'
-    },
     fmb_valuation_link: '/fmb/valuation/RELIANCE',
     technicals_link: '/technicals/chart/NSE:RELIANCE',
     provider: 'NSE Corporate Registry / Reliance Regulatory Disclosures',
     sourceUrl: 'https://www.ril.com',
     adapter: 'server/company_intelligence_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'INE002A01018',
     physical_assets: [
       {
@@ -156,8 +149,7 @@ export const COMPANIES_DATA: CompanyProfile[] = [
       latitude: 18.9515,
       longitude: 72.8425
     },
-    market_cap_usd: '$16.5 Billion',
-    description: 'India pioneer integrated electric utility company with over 14.7 GW generation capacity across thermal, hydro, solar, and wind, alongside transmission and national EV charging networks.',
+    description: 'India pioneer integrated electric utility company with generation capacity across thermal, hydro, solar, and wind, alongside transmission and national EV charging networks.',
     subsidiaries: [
       'Tata Power Renewable Energy Limited (TPREL)',
       'Tata Power Solar Systems',
@@ -167,19 +159,13 @@ export const COMPANIES_DATA: CompanyProfile[] = [
     ],
     key_brands: ['Tata Power EZ Charge', 'Tata Power Solar', 'Club Enerji'],
     commodity_exposure: ['Thermal Coal (Indonesian / Domestic)', 'Solar Photovoltaic Cells', 'Electricity Base Tariffs'],
-    astra_signal: {
-      bias: 'BULLISH',
-      confidence: 82,
-      summary: 'Aggressive 4.3 GW cell/module manufacturing ramp in Tirunelveli and rising utility solar order books support margin expansion.',
-      target_link: '/astra/signals/TATAPOWER'
-    },
     fmb_valuation_link: '/fmb/valuation/TATAPOWER',
     technicals_link: '/technicals/chart/NSE:TATAPOWER',
     provider: 'NSE Corporate Registry / Central Electricity Regulatory Commission (CERC)',
     sourceUrl: 'https://www.tatapower.com',
     adapter: 'server/company_intelligence_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'INE245A01021',
     physical_assets: [
       {
@@ -279,24 +265,17 @@ export const COMPANIES_DATA: CompanyProfile[] = [
       latitude: 47.6423,
       longitude: -122.1300
     },
-    market_cap_usd: '$3.15 Trillion',
-    description: 'Global hyperscale computing leader providing Azure AI infrastructure, enterprise software, cloud productivity tools, gaming, and proprietary undersea transmission cables.',
+    description: 'Global hyperscale computing leader providing Azure cloud infrastructure, enterprise software, productivity tools, and global datacenter campuses.',
     subsidiaries: ['LinkedIn', 'GitHub', 'Activision Blizzard', 'Nuance Communications', 'Azure'],
     key_brands: ['Azure', 'Windows', 'Microsoft 365', 'Xbox', 'Copilot', 'Surface'],
-    commodity_exposure: ['Electric Power (Datacenter Megawatts)', 'GPU Compute Accelerators (NVIDIA/Custom Maia)', 'Fiber Cable Bandwidth'],
-    astra_signal: {
-      bias: 'BULLISH',
-      confidence: 91,
-      summary: 'Azure AI cloud workload growth exceeds 29% YoY with dominant enterprise OpenAI runtime integration.',
-      target_link: '/astra/signals/MSFT'
-    },
+    commodity_exposure: ['Electric Power (Datacenter Megawatts)', 'GPU Compute Accelerators', 'Fiber Cable Bandwidth'],
     fmb_valuation_link: '/fmb/valuation/MSFT',
     technicals_link: '/technicals/chart/NASDAQ:MSFT',
     provider: 'SEC EDGAR / Microsoft Form 10-K',
     sourceUrl: 'https://www.microsoft.com',
     adapter: 'server/company_intelligence_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'US5949181045',
     physical_assets: [
       {
@@ -396,24 +375,17 @@ export const COMPANIES_DATA: CompanyProfile[] = [
       latitude: 37.3346,
       longitude: -122.0090
     },
-    market_cap_usd: '$3.45 Trillion',
-    description: 'World most valuable consumer technology company creating iPhone, Mac, iPad, Apple Silicon chips, and global iCloud service infrastructure.',
+    description: 'Consumer technology leader developing personal computers, mobile devices, custom silicon, and digital services infrastructure.',
     subsidiaries: ['Beats Electronics', 'Beddit', 'Shazam Entertainment', 'Claris'],
     key_brands: ['iPhone', 'MacBook', 'iPad', 'Apple Watch', 'AirPods', 'Vision Pro', 'Apple TV+'],
-    commodity_exposure: ['Recycled Aluminum', 'Cobalt & Lithium (Battery Cathodes)', 'TSMC 3nm Silicon Wafers', 'Display Glass'],
-    astra_signal: {
-      bias: 'NEUTRAL',
-      confidence: 76,
-      summary: 'High ecosystem stickiness and record Services gross margins balance extended consumer smartphone replacement cycles.',
-      target_link: '/astra/signals/AAPL'
-    },
+    commodity_exposure: ['Recycled Aluminum', 'Cobalt & Lithium (Battery Cathodes)', 'Silicon Wafers', 'Display Glass'],
     fmb_valuation_link: '/fmb/valuation/AAPL',
     technicals_link: '/technicals/chart/NASDAQ:AAPL',
     provider: 'SEC EDGAR / Apple 10-K Regulatory Disclosures',
     sourceUrl: 'https://www.apple.com',
     adapter: 'server/company_intelligence_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'US0378331005',
     physical_assets: [
       {
@@ -513,24 +485,17 @@ export const COMPANIES_DATA: CompanyProfile[] = [
       latitude: 37.3708,
       longitude: -121.9665
     },
-    market_cap_usd: '$3.30 Trillion',
-    description: 'Pioneered GPU-accelerated computing, transforming global artificial intelligence, gaming, autonomous systems, and high-performance computing with Blackwell and CUDA architectures.',
+    description: 'Pioneered GPU-accelerated computing, developing accelerated processors, CUDA software architectures, and scalable AI infrastructure systems.',
     subsidiaries: ['Mellanox Technologies', 'Cumulus Networks', 'Run:ai', 'DeepMap'],
     key_brands: ['GeForce', 'NVIDIA RTX', 'Grace Hopper', 'Blackwell B200', 'CUDA', 'Spectrum-X', 'Quantum InfiniBand'],
-    commodity_exposure: ['High-Bandwidth Memory (HBM3e / SK Hynix)', 'CoWoS Packaging Substrates', 'Ultra-Pure Monocrystalline Silicon'],
-    astra_signal: {
-      bias: 'BULLISH',
-      confidence: 94,
-      summary: 'Structural hyperscaler Blackwell/Hopper demand backlog extends deep into 2026 with gross margins remaining above 72%.',
-      target_link: '/astra/signals/NVDA'
-    },
+    commodity_exposure: ['High-Bandwidth Memory (HBM3e)', 'CoWoS Packaging Substrates', 'Silicon Wafers'],
     fmb_valuation_link: '/fmb/valuation/NVDA',
     technicals_link: '/technicals/chart/NASDAQ:NVDA',
     provider: 'SEC EDGAR / NVIDIA 10-K Filings',
     sourceUrl: 'https://www.nvidia.com',
     adapter: 'server/company_intelligence_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'US67066G1040',
     physical_assets: [
       {
@@ -614,28 +579,21 @@ export const COMPANIES_DATA: CompanyProfile[] = [
       latitude: 37.5360,
       longitude: -77.4410
     },
-    market_cap_usd: '$47.8 Billion',
-    description: 'Major American utility supplying clean electricity and natural gas to over 7 million customers across Virginia and the Carolinas, powering the world largest concentration of hyperscale AI data centers.',
+    description: 'Major American regulated electric and natural gas utility operating generation facilities across nuclear, solar, natural gas, and offshore wind.',
     subsidiaries: [
       'Virginia Electric and Power Company (Dominion Energy Virginia)',
       'Dominion Energy South Carolina',
       'Dominion Energy Transmission'
     ],
     key_brands: ['Dominion Energy', 'Dominion Green Power'],
-    commodity_exposure: ['Solar Photovoltaic Electricity', 'Nuclear Enriched Uranium', 'Natural Gas', 'Offshore Wind Turbine Foundations'],
-    astra_signal: {
-      bias: 'BULLISH',
-      confidence: 84,
-      summary: 'Historic electric load growth requests from Northern Virginia AI data center operators catalyze rate base capital deployment.',
-      target_link: '/astra/signals/D'
-    },
+    commodity_exposure: ['Solar Photovoltaic Electricity', 'Nuclear Enriched Uranium', 'Natural Gas', 'Offshore Wind'],
     fmb_valuation_link: '/fmb/valuation/D',
     technicals_link: '/technicals/chart/NYSE:D',
     provider: 'SEC EDGAR / Virginia State Corporation Commission (SCC)',
     sourceUrl: 'https://www.dominionenergy.com',
     adapter: 'server/company_intelligence_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'US25746U1097',
     physical_assets: [
       {

@@ -22,7 +22,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'https://www.eia.gov/electricity/data/browser/#/plant/63031',
     adapter: 'server/infrastructure_eia_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'EIA-63031'
   },
   // 2. Tata Power — Mundra Ultra Mega Power Plant (Gujarat, India)
@@ -45,7 +45,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'https://www.tatapower.com/businesses/generation.aspx',
     adapter: 'server/infrastructure_cea_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'CEA-IND-CGPL-01'
   },
   // 3. Reliance Industries — Jamnagar Captive Cogeneration Complex (Gujarat, India)
@@ -68,7 +68,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'https://www.ril.com/businesses/oil-to-chemicals',
     adapter: 'server/infrastructure_ril_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'RIL-JMN-COGEN'
   },
   // 4. Tata Power Renewable — Pavagada Solar Park (Karnataka, India)
@@ -91,7 +91,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'https://www.tatapowerrenewables.com/',
     adapter: 'server/infrastructure_tprel_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'TPREL-PVG-400'
   },
   // 5. Dominion Energy — Surry Nuclear Power Station (Virginia, USA)
@@ -115,7 +115,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'https://www.nrc.gov/info-finder/reactors/surry1.html',
     adapter: 'server/infrastructure_nrc_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'NRC-SUR-01'
   },
   // 6. Dominion Energy — North Anna Nuclear Station (Virginia, USA)
@@ -139,7 +139,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'https://www.nrc.gov/info-finder/reactors/na1.html',
     adapter: 'server/infrastructure_nrc_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'NRC-NA-01'
   },
   // 7. Three Gorges Hydroelectric Facility (Hubei, China)
@@ -161,7 +161,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'https://www.ctg.com.cn/',
     adapter: 'server/infrastructure_hydro_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'IHA-CHN-TG-01'
   },
   // 8. Grand Coulee Hydroelectric Facility (Washington, USA)
@@ -184,7 +184,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'https://www.usbr.gov/pn/grandcoulee/',
     adapter: 'server/infrastructure_usbr_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'USBR-GC-01'
   },
   // 9. Hornsea 2 Offshore Wind Farm (North Sea, UK)
@@ -206,7 +206,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'https://hornseaprojects.co.uk/',
     adapter: 'server/infrastructure_wind_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'UK-ESO-HORN2'
   },
   // 10. Gansu Wind Farm / Jiuquan Wind Power Base (Gansu, China)
@@ -228,7 +228,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     sourceUrl: 'http://www.sgcc.com.cn',
     adapter: 'server/infrastructure_wind_adapter',
     fetched_at: new Date().toISOString(),
-    status: 'STATIC DATA',
+    status: 'STATIC_REFERENCE',
     raw_identifier: 'SGCC-GANSU-WIND'
   }
 ];

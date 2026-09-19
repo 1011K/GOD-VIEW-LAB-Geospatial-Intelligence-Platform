@@ -15,7 +15,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://cwwp2.dot.ca.gov',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 30,
     description: 'Official Caltrans CCTV camera monitoring real-time westbound traffic flow approaching the San Francisco-Oakland Bay Bridge toll gantry.',
     adapter: 'server/transport_camera_adapter'
@@ -34,7 +34,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://cwwp2.dot.ca.gov',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 30,
     description: 'Caltrans surveillance feed overlooking Interstate 405 through the critical Sepulveda Pass artery in Los Angeles County.',
     adapter: 'server/transport_camera_adapter'
@@ -53,7 +53,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://511ny.org',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 15,
     description: 'NYC Traffic Management Center public camera monitoring pedestrian and vehicular circulation through Midtown Manhattan.',
     adapter: 'server/transport_camera_adapter'
@@ -72,7 +72,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://511ny.org',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 20,
     description: 'Busiest motor vehicle bridge in the world carrying I-95 / US-1 across the Hudson River between Manhattan and Fort Lee, NJ.',
     adapter: 'server/transport_camera_adapter'
@@ -91,7 +91,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://tfl.gov.uk/traffic/status/',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 45,
     description: 'Official TfL JamCam live feed monitoring vehicular and maritime bascule movements at Tower Bridge across the River Thames.',
     adapter: 'server/transport_camera_adapter'
@@ -110,7 +110,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://tfl.gov.uk/traffic/status/',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 45,
     description: 'TfL JamCam feed overlooking Westminster Bridge and Parliament Square traffic junctions in central London.',
     adapter: 'server/transport_camera_adapter'
@@ -129,7 +129,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://www.livetraffic.com',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 60,
     description: 'Government road agency camera monitoring Sydney Harbour Bridge deck and Bradfield Highway circulation in Sydney, Australia.',
     adapter: 'server/transport_camera_adapter'
@@ -148,7 +148,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://multimedia.panama-canal.com/',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 30,
     description: 'Official maritime transit webcam watching Panamax and Neopanamax vessels transiting the Pacific lock chamber.',
     adapter: 'server/transport_camera_adapter'
@@ -167,7 +167,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://multimedia.panama-canal.com/',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 30,
     description: 'Public canal operations camera overlooking the 3-stage flight of locks lifting vessels between the Atlantic and Lake Gatun.',
     adapter: 'server/transport_camera_adapter'
@@ -186,7 +186,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://www.kouwan.metro.tokyo.lg.jp',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 60,
     description: 'Public municipal camera monitoring navigation channels under the Rainbow Bridge and the Yurikamome transit corridor.',
     adapter: 'server/transport_camera_adapter'
@@ -205,7 +205,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://uym.ibb.gov.tr',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 30,
     description: 'Public transit camera watching maritime tankers and bulk carriers navigating the Bosphorus strait between Europe and Asia.',
     adapter: 'server/transport_camera_adapter'
@@ -224,7 +224,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://cotrip.org',
     fetched_at: new Date().toISOString(),
     last_verified_at: new Date().toISOString(),
-    status: 'LIVE',
+    status: 'UNKNOWN',
     freshness_seconds: 45,
     description: 'Highest vehicular tunnel in North America carrying Interstate 70 through the Continental Divide at 11,158 feet elevation.',
     adapter: 'server/transport_camera_adapter'

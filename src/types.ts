@@ -1,4 +1,4 @@
-export type SourceStatus = 'VERIFIED LIVE' | 'LIVE' | 'STALE' | 'OFFLINE' | 'UNAVAILABLE' | 'SOURCE UNAVAILABLE' | 'REQUIRES KEY' | 'BROKEN' | 'STATIC DATA' | 'MOCK/DEMO' | 'UNKNOWN';
+export type SourceStatus = 'VERIFIED LIVE' | 'LIVE' | 'STALE' | 'OFFLINE' | 'UNAVAILABLE' | 'SOURCE UNAVAILABLE' | 'REQUIRES KEY' | 'BROKEN' | 'STATIC DATA' | 'STATIC_REFERENCE' | 'MOCK/DEMO' | 'UNKNOWN';
 
 export interface DataProvenance {
   provider: string;
@@ -175,14 +175,14 @@ export interface CompanyProfile extends DataProvenance {
   key_brands: string[];
   physical_assets: PhysicalAssetRecord[];
   commodity_exposure: string[];
-  astra_signal: {
+  astra_signal?: {
     bias: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
     confidence: number;
     summary: string;
     target_link: string;
   };
-  fmb_valuation_link: string;
-  technicals_link: string;
+  fmb_valuation_link?: string;
+  technicals_link?: string;
 }
 
 export type CameraStatus = 'LIVE' | 'STALE' | 'OFFLINE' | 'UNAVAILABLE' | 'UNKNOWN';

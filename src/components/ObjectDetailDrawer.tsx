@@ -38,10 +38,42 @@ export function ObjectDetailDrawer({ selectedObject, onClose, onOpenCompany }: O
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [cameraImgError, setCameraImgError] = useState(false);
+  const [cameraLiveStatus, setCameraLiveStatus] = useState<string>('UNKNOWN');
+  const [cameraProbeTime, setCameraProbeTime] = useState<string | null>(null);
+  const [isProbingCamera, setIsProbingCamera] = useState(false);
 
   useEffect(() => {
     setCameraImgError(false);
     setAiAnalysis(null);
+    setCameraLiveStatus(selectedObject?.status || 'UNKNOWN');
+    setCameraProbeTime(null);
+
+    // If selectedObject is a camera, run active upstream probe
+    if (selectedObject && (selectedObject.camera_id || selectedObject.type === 'camera')) {
+      const camId = selectedObject.camera_id || selectedObject.id;
+      if (camId) {
+        setIsProbingCamera(true);
+        fetch(`/api/cameras/check-status?camera_id=${encodeURIComponent(camId)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.status === 'LIVE') {
+              setCameraLiveStatus('LIVE');
+              setCameraProbeTime(data.last_verified_at);
+            } else {
+              setCameraLiveStatus('UNAVAILABLE');
+              setCameraImgError(true);
+              setCameraProbeTime(data.last_verified_at || new Date().toISOString());
+            }
+          })
+          .catch(() => {
+            setCameraLiveStatus('UNAVAILABLE');
+            setCameraImgError(true);
+          })
+          .finally(() => {
+            setIsProbingCamera(false);
+          });
+      }
+    }
   }, [selectedObject]);
 
   if (!selectedObject) return null;
@@ -353,14 +385,27 @@ export function ObjectDetailDrawer({ selectedObject, onClose, onOpenCompany }: O
                 <Video className="w-3.5 h-3.5 text-emerald-400" />
                 <span>PUBLIC CCTV TELEMETRY</span>
               </span>
-              <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                cameraImgError 
-                  ? 'bg-rose-950 text-rose-300 border border-rose-500/50' 
-                  : 'bg-emerald-950 text-emerald-300 border border-emerald-500/50'
-              }`}>
-                {cameraImgError ? 'SOURCE UNAVAILABLE' : (selectedObject.status || 'LIVE')}
-              </span>
+              <div className="flex items-center space-x-1">
+                {isProbingCamera && (
+                  <span className="text-[9px] text-cyan-400 animate-pulse">PROBING UPSTREAM...</span>
+                )}
+                <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                  cameraLiveStatus === 'LIVE'
+                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/50'
+                    : cameraLiveStatus === 'UNKNOWN'
+                    ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                    : 'bg-rose-950 text-rose-300 border border-rose-500/50'
+                }`}>
+                  {cameraLiveStatus}
+                </span>
+              </div>
             </div>
+
+            {cameraProbeTime && (
+              <div className="text-[9px] text-slate-400 font-mono">
+                Last Upstream Probe: {new Date(cameraProbeTime).toLocaleTimeString()}
+              </div>
+            )}
 
             {cameraImgError ? (
               <div className="p-3.5 rounded-lg bg-rose-950/30 border border-rose-500/40 text-rose-200 text-center space-y-1.5 font-mono">
