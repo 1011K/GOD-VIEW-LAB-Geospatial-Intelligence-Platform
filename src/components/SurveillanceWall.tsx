@@ -97,13 +97,12 @@ export const SurveillanceWall: React.FC<SurveillanceWallProps> = ({
               <h1 className="text-sm font-bold tracking-wider text-cyan-300 uppercase">
                 Tactical Surveillance Wall
               </h1>
-              <span className="px-2 py-0.5 text-[10px] rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                LIVE MULTI-MATRIX
+              <span className="px-2 py-0.5 text-[10px] rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold flex items-center gap-1">
+                OPTICAL FEED MATRIX
               </span>
             </div>
             <p className="text-[10px] text-slate-400">
-              Simultaneous High-Throughput Tactical & Geospatial Optical Feeds ({filteredCameras.length} Registered Nodes)
+              Public Highway & Geospatial Optical Feeds ({filteredCameras.length} Catalog Nodes)
             </p>
           </div>
         </div>
@@ -285,19 +284,17 @@ export const SurveillanceWall: React.FC<SurveillanceWallProps> = ({
       {/* Bottom Status Ticker Bar */}
       <footer className="flex-none px-4 py-1.5 bg-slate-900/80 border-t border-slate-800 text-[10px] text-slate-400 flex items-center justify-between z-20">
         <div className="flex items-center space-x-4">
-          <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-            <CheckCircle className="w-3 h-3" />
-            FEED STREAM MATRIX: SYNCHRONIZED
+          <span className="flex items-center gap-1.5 text-cyan-400 font-semibold">
+            OPTICAL FEED DIRECTORY: {currentSlots.length} DISPLAYED
           </span>
           <span className="hidden md:inline text-slate-500">|</span>
-          <span className="hidden md:inline text-cyan-300">
-            PROVENANCE: Direct upstream CDN / Verified RTSP / Government DOT Nodes
+          <span className="hidden md:inline text-slate-400">
+            PROVENANCE: Government DOT / Municipal Traffic Services
           </span>
         </div>
         <div className="flex items-center space-x-3 text-slate-400">
-          <span>LATENCY: ~120ms</span>
-          <span>CODEC: H.264 / WebRTC</span>
-          <span className="text-cyan-400 font-bold">{currentSlots.length} ACTIVE CHANNELS</span>
+          <span>SOURCE TYPE: Public Embed / Snapshot</span>
+          <span className="text-cyan-400 font-bold">{currentSlots.length} CHANNELS</span>
         </div>
       </footer>
     </div>
@@ -350,12 +347,20 @@ const VideoFeedTile: React.FC<VideoFeedTileProps> = ({
       {/* Header Overlay */}
       <div className="absolute top-0 left-0 right-0 z-20 px-2.5 py-1.5 bg-gradient-to-b from-slate-950/90 via-slate-950/60 to-transparent flex items-center justify-between gap-2">
         <div className="flex items-center space-x-2 min-w-0">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-none" />
+          <div className={`w-2 h-2 rounded-full flex-none ${
+            camera.status === 'LIVE' ? 'bg-emerald-500 animate-pulse' :
+            (camera.status as string) === 'REACHABLE' ? 'bg-cyan-400' :
+            camera.status === 'UNAVAILABLE' || camera.status === 'OFFLINE' ? 'bg-rose-500' :
+            'bg-amber-500'
+          }`} />
           <span className="text-xs font-bold text-slate-100 truncate tracking-wide">
             {camera.name}
           </span>
           <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex-none uppercase">
             {camera.stream_type || camera.media_type}
+          </span>
+          <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700 flex-none">
+            {camera.status}
           </span>
         </div>
 

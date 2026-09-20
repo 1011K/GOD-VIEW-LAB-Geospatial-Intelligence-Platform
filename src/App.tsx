@@ -109,20 +109,23 @@ export default function App() {
     } catch {}
   }, [isSideMapOpen]);
 
+  // Track per-feed response status and errors
+  const [feedStatuses, setFeedStatuses] = useState<Record<string, { status: string; error?: string }>>({});
+
   // 1. Fetch ADS-B Flights
   const fetchFlights = useCallback(async () => {
     try {
       const res = await fetch('/api/flights');
-      if (!res.ok) {
-        console.warn(`Flights endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setFlights(json.data);
+        setFeedStatuses(prev => ({ ...prev, flights: { status: json.status || 'LIVE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, flights: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('Flights ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, flights: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, []);
 
@@ -130,10 +133,6 @@ export default function App() {
   const fetchSatellites = useCallback(async () => {
     try {
       const res = await fetch(`/api/satellites?group=${encodeURIComponent(satelliteGroup)}`);
-      if (!res.ok) {
-        console.warn(`Satellites endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         const withCoords = json.data.map((s: SatelliteRecord) => {
@@ -147,9 +146,13 @@ export default function App() {
           }
         }).filter((s: SatelliteRecord) => s.calculated !== null && s.calculated !== undefined);
         setSatellites(withCoords);
+        setFeedStatuses(prev => ({ ...prev, satellites: { status: json.status || 'LIVE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, satellites: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('Satellites ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, satellites: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, [satelliteGroup, simTime]);
 
@@ -157,16 +160,16 @@ export default function App() {
   const fetchEarthquakes = useCallback(async () => {
     try {
       const res = await fetch('/api/earthquakes');
-      if (!res.ok) {
-        console.warn(`Earthquakes endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setEarthquakes(json.data);
+        setFeedStatuses(prev => ({ ...prev, earthquakes: { status: json.status || 'LIVE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, earthquakes: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('Earthquakes ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, earthquakes: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, []);
 
@@ -174,16 +177,16 @@ export default function App() {
   const fetchWildfires = useCallback(async () => {
     try {
       const res = await fetch('/api/wildfires');
-      if (!res.ok) {
-        console.warn(`Wildfires endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setWildfires(json.data);
+        setFeedStatuses(prev => ({ ...prev, wildfires: { status: json.status || 'LIVE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, wildfires: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('Wildfires ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, wildfires: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, []);
 
@@ -191,16 +194,16 @@ export default function App() {
   const fetchInfrastructure = useCallback(async () => {
     try {
       const res = await fetch('/api/infrastructure');
-      if (!res.ok) {
-        console.warn(`Infrastructure endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setInfrastructure(json.data);
+        setFeedStatuses(prev => ({ ...prev, infrastructure: { status: json.status || 'STATIC_REFERENCE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, infrastructure: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('Infrastructure ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, infrastructure: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, []);
 
@@ -208,16 +211,16 @@ export default function App() {
   const fetchCameras = useCallback(async () => {
     try {
       const res = await fetch('/api/cameras');
-      if (!res.ok) {
-        console.warn(`Cameras endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setCameras(json.data);
+        setFeedStatuses(prev => ({ ...prev, cameras: { status: json.status || 'STATIC_REFERENCE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, cameras: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('Cameras ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, cameras: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, []);
 
@@ -225,16 +228,16 @@ export default function App() {
   const fetchVessels = useCallback(async () => {
     try {
       const res = await fetch('/api/vessels');
-      if (!res.ok) {
-        console.warn(`Vessels endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setVessels(json.data);
+        setFeedStatuses(prev => ({ ...prev, vessels: { status: json.status || 'STATIC_REFERENCE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, vessels: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('Vessels ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, vessels: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, []);
 
@@ -242,16 +245,16 @@ export default function App() {
   const fetchCompanies = useCallback(async () => {
     try {
       const res = await fetch('/api/companies');
-      if (!res.ok) {
-        console.warn(`Companies endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setCompanies(json.data);
+        setFeedStatuses(prev => ({ ...prev, companies: { status: json.status || 'STATIC_REFERENCE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, companies: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('Companies ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, companies: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, []);
 
@@ -259,16 +262,16 @@ export default function App() {
   const fetchNews = useCallback(async () => {
     try {
       const res = await fetch('/api/news');
-      if (!res.ok) {
-        console.warn(`News endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setNews(json.data);
+        setFeedStatuses(prev => ({ ...prev, news: { status: json.status || 'LIVE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, news: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('News ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, news: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, []);
 
@@ -276,16 +279,16 @@ export default function App() {
   const fetchMacro = useCallback(async () => {
     try {
       const res = await fetch('/api/macro');
-      if (!res.ok) {
-        console.warn(`Macro endpoint HTTP ${res.status}`);
-        return;
-      }
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setMacro(json.data);
+        setFeedStatuses(prev => ({ ...prev, macro: { status: json.status || 'LIVE' } }));
+      } else {
+        setFeedStatuses(prev => ({ ...prev, macro: { status: json.status || 'UNAVAILABLE', error: json.error } }));
       }
     } catch (err: any) {
       console.warn('Macro ingest notice:', err?.message || err);
+      setFeedStatuses(prev => ({ ...prev, macro: { status: 'UNAVAILABLE', error: err?.message || String(err) } }));
     }
   }, []);
 
@@ -752,9 +755,11 @@ export default function App() {
             wildfires={wildfires}
             flights={flights}
             satellites={satellites}
+            infrastructure={infrastructure}
             news={news}
             macro={macro}
             sourcesHealth={sourcesHealth}
+            feedStatuses={feedStatuses}
           />
         )}
 

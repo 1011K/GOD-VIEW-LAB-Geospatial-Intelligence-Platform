@@ -13,11 +13,11 @@ export const MARINE_VESSELS_DATA: VesselRecord[] = [
     course_deg: 325,
     destination: 'ROTTERDAM',
     flag_country: 'Panama',
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     provider: 'Danish Maritime Authority / Coastal AIS Network',
     sourceUrl: 'https://dma.dk',
     adapter: 'server/maritime_ais_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     raw_identifier: 'IMO-9811000'
   },
   // 2. TI EUROPE (Ultra Large Crude Carrier / ULCC, Singapore Strait)
@@ -32,11 +32,11 @@ export const MARINE_VESSELS_DATA: VesselRecord[] = [
     course_deg: 82,
     destination: 'NINGBO',
     flag_country: 'Belgium',
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     provider: 'MPA Singapore / AISHub Terrestrial Receivers',
     sourceUrl: 'https://www.mpa.gov.sg',
     adapter: 'server/maritime_ais_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     raw_identifier: 'IMO-9235268'
   },
   // 3. CMA CGM ANTOINE DE SAINT EXUPERY (Mega Container, English Channel)
@@ -51,11 +51,11 @@ export const MARINE_VESSELS_DATA: VesselRecord[] = [
     course_deg: 240,
     destination: 'LE HAVRE',
     flag_country: 'France',
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     provider: 'CROSS Gris-Nez / Marine Traffic Terrestrial Feed',
     sourceUrl: 'https://www.mer.gouv.fr',
     adapter: 'server/maritime_ais_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     raw_identifier: 'IMO-9776418'
   },
   // 4. Q-MAX MOZAH (Largest LNG Carrier in the world, Strait of Hormuz)
@@ -70,11 +70,11 @@ export const MARINE_VESSELS_DATA: VesselRecord[] = [
     course_deg: 135,
     destination: 'TOKYO BAY',
     flag_country: 'Marshall Islands',
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     provider: 'Regional Maritime Security Center / Coastal AIS',
     sourceUrl: 'https://gulf-ais.net',
     adapter: 'server/maritime_ais_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     raw_identifier: 'IMO-9337755'
   },
   // 5. MAERSK MC-KINNEY MOLLER (Triple-E Container, North Sea / Heligoland)
@@ -89,11 +89,11 @@ export const MARINE_VESSELS_DATA: VesselRecord[] = [
     course_deg: 110,
     destination: 'BREMERHAVEN',
     flag_country: 'Denmark',
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     provider: 'German Federal Maritime and Hydrographic Agency (BSH)',
     sourceUrl: 'https://www.bsh.de',
     adapter: 'server/maritime_ais_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     raw_identifier: 'IMO-9619907'
   },
   // 6. RELIANCE ETHANE (Very Large Ethane Carrier / VLEC, Gulf of Kutch / Jamnagar)
@@ -108,11 +108,11 @@ export const MARINE_VESSELS_DATA: VesselRecord[] = [
     course_deg: 175,
     destination: 'JAMNAGAR SPM TERMINAL',
     flag_country: 'Marshall Islands',
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     provider: 'Directorate General of Shipping India / AIS Coastal Radar',
     sourceUrl: 'https://dgshipping.gov.in',
     adapter: 'server/maritime_ais_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     raw_identifier: 'IMO-9752527'
   },
   // 7. VALEMAX BRASIL (Valemax 400,000 DWT Chinamax Bulk Carrier, Luzon Strait)
@@ -127,11 +127,11 @@ export const MARINE_VESSELS_DATA: VesselRecord[] = [
     course_deg: 350,
     destination: 'QINGDAO',
     flag_country: 'Singapore',
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     provider: 'Philippine Coast Guard / Maritime Domain Awareness',
     sourceUrl: 'https://coastguard.gov.ph',
     adapter: 'server/maritime_ais_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     raw_identifier: 'IMO-9488918'
   },
   // 8. OOCL HONG KONG (G-Class Container Ship, Gibraltar Strait)
@@ -146,11 +146,11 @@ export const MARINE_VESSELS_DATA: VesselRecord[] = [
     course_deg: 88,
     destination: 'SUEZ CANAL',
     flag_country: 'Hong Kong',
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     provider: 'Tarifa Traffic / Salvamento Marítimo Spain',
     sourceUrl: 'https://www.salvamentomaritimo.es',
     adapter: 'server/maritime_ais_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     raw_identifier: 'IMO-9776171'
   }
 ];

@@ -30,7 +30,7 @@ export const COMPANIES_DATA: CompanyProfile[] = [
     provider: 'NSE Corporate Registry / Reliance Regulatory Disclosures',
     sourceUrl: 'https://www.ril.com',
     adapter: 'server/company_intelligence_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'INE002A01018',
     physical_assets: [
@@ -164,7 +164,7 @@ export const COMPANIES_DATA: CompanyProfile[] = [
     provider: 'NSE Corporate Registry / Central Electricity Regulatory Commission (CERC)',
     sourceUrl: 'https://www.tatapower.com',
     adapter: 'server/company_intelligence_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'INE245A01021',
     physical_assets: [
@@ -274,7 +274,7 @@ export const COMPANIES_DATA: CompanyProfile[] = [
     provider: 'SEC EDGAR / Microsoft Form 10-K',
     sourceUrl: 'https://www.microsoft.com',
     adapter: 'server/company_intelligence_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'US5949181045',
     physical_assets: [
@@ -384,7 +384,7 @@ export const COMPANIES_DATA: CompanyProfile[] = [
     provider: 'SEC EDGAR / Apple 10-K Regulatory Disclosures',
     sourceUrl: 'https://www.apple.com',
     adapter: 'server/company_intelligence_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'US0378331005',
     physical_assets: [
@@ -494,7 +494,7 @@ export const COMPANIES_DATA: CompanyProfile[] = [
     provider: 'SEC EDGAR / NVIDIA 10-K Filings',
     sourceUrl: 'https://www.nvidia.com',
     adapter: 'server/company_intelligence_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'US67066G1040',
     physical_assets: [
@@ -592,7 +592,7 @@ export const COMPANIES_DATA: CompanyProfile[] = [
     provider: 'SEC EDGAR / Virginia State Corporation Commission (SCC)',
     sourceUrl: 'https://www.dominionenergy.com',
     adapter: 'server/company_intelligence_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'US25746U1097',
     physical_assets: [

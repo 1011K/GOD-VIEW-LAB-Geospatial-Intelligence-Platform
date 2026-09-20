@@ -33,32 +33,54 @@ export function SourceHealthModal({
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'LIVE':
       case 'VERIFIED LIVE':
         return (
           <span className="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-mono text-[10px] font-bold flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            VERIFIED LIVE
+            LIVE
+          </span>
+        );
+      case 'CACHED':
+        return (
+          <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 font-mono text-[10px] font-bold">
+            CACHED
+          </span>
+        );
+      case 'STALE':
+        return (
+          <span className="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-500/50 text-amber-300 font-mono text-[10px] font-bold">
+            STALE
           </span>
         );
       case 'STATIC DATA':
+      case 'STATIC_REFERENCE':
         return (
           <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px] font-bold">
-            STATIC BASELINE
+            STATIC_REFERENCE
+          </span>
+        );
+      case 'NOT_CHECKED':
+        return (
+          <span className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 font-mono text-[10px] font-bold">
+            NOT_CHECKED
           </span>
         );
       case 'REQUIRES KEY':
+      case 'NOT_CONFIGURED':
         return (
           <span className="px-2 py-0.5 rounded bg-amber-950/80 border border-amber-500/50 text-amber-300 font-mono text-[10px] font-bold flex items-center gap-1">
             <Key className="w-2.5 h-2.5" />
-            REQUIRES KEY
+            {status}
           </span>
         );
+      case 'UNAVAILABLE':
       case 'SOURCE UNAVAILABLE':
       case 'BROKEN':
         return (
           <span className="px-2 py-0.5 rounded bg-rose-950/80 border border-rose-500/50 text-rose-300 font-mono text-[10px] font-bold flex items-center gap-1">
             <AlertTriangle className="w-2.5 h-2.5" />
-            SOURCE UNAVAILABLE
+            UNAVAILABLE
           </span>
         );
       default:
@@ -143,7 +165,7 @@ export function SourceHealthModal({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] bg-slate-950/60 p-2.5 rounded-lg border border-slate-850">
                 <div>
                   <span className="text-slate-400 block text-[9px]">RESPONSE LATENCY:</span>
-                  <span className="text-emerald-400 font-bold">{source.latency_ms} ms</span>
+                  <span className="text-emerald-400 font-bold">{source.latency_ms != null ? `${source.latency_ms} ms` : 'N/A'}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 block text-[9px]">OBSERVATIONS:</span>

@@ -1,3 +1,4 @@
+import * as satellite from 'satellite.js';
 import { SatelliteRecord } from '../types';
 
 // Constants for WGS-84 / Earth Gravitational Model
@@ -113,7 +114,74 @@ function solveKepler(meanAnomalyRad: number, eccentricity: number): number {
   return E;
 }
 
+/**
+ * CANONICAL SGP4 PROPAGATOR: Uses satellite.js for precise NORAD Simplified General Perturbations (SGP4/SDP4).
+ * Pipeline: TLE -> twoline2satrec -> propagate -> gstime -> eciToGeodetic
+ */
 export function calculateSatellitePosition(sat: SatelliteRecord, date: Date = new Date()): SatelliteRecord['calculated'] | null {
+  try {
+    if (!sat.line1 || !sat.line2) return null;
+    const l1 = sat.line1.trim();
+    const l2 = sat.line2.trim();
+    if (!l1.startsWith('1 ') || !l2.startsWith('2 ')) return null;
+
+    // 1. Initialize satrec from Two-Line Element set
+    const satrec = satellite.twoline2satrec(l1, l2);
+    if (!satrec || satrec.error) return null;
+
+    // 2. Propagate orbit to target time
+    const pv = satellite.propagate(satrec, date);
+    if (!pv || !pv.position || typeof pv.position === 'boolean' || !pv.velocity || typeof pv.velocity === 'boolean') {
+      return null;
+    }
+
+    const pos = pv.position;
+    const vel = pv.velocity;
+
+    // 3. Coordinate conversion: ECI to Geodetic via Greenwich Sidereal Time
+    const gmst = satellite.gstime(date);
+    const geodetic = satellite.eciToGeodetic(pos, gmst);
+    if (!geodetic || isNaN(geodetic.latitude) || isNaN(geodetic.longitude) || isNaN(geodetic.height)) {
+      return null;
+    }
+
+    const latitudeDeg = satellite.degreesLat(geodetic.latitude);
+    let longitudeDeg = satellite.degreesLong(geodetic.longitude);
+    while (longitudeDeg > 180) longitudeDeg -= 360;
+    while (longitudeDeg < -180) longitudeDeg += 360;
+
+    const altitudeKm = Math.max(0, geodetic.height);
+    const velocityKmS = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
+
+    // Geometric visibility horizon radius in km
+    const horizonAngle = Math.acos(Math.min(0.999, EARTH_RADIUS_KM / (EARTH_RADIUS_KM + altitudeKm)));
+    const footprintRadiusKm = EARTH_RADIUS_KM * horizonAngle;
+
+    // Orbital inclination and period
+    const inclinationDeg = satrec.inclo !== undefined ? satrec.inclo * RAD_TO_DEG : parseFloat(l2.substring(8, 16));
+    const meanMotionRevPerDay = satrec.no !== undefined ? (satrec.no * 1440) / TWO_PI : parseFloat(l2.substring(52, 63));
+    const periodMinutes = meanMotionRevPerDay > 0 ? (24 * 60) / meanMotionRevPerDay : 90;
+
+    return {
+      latitude: Number(latitudeDeg.toFixed(4)),
+      longitude: Number(longitudeDeg.toFixed(4)),
+      altitudeKm: Math.round(altitudeKm),
+      velocityKmS: Number(velocityKmS.toFixed(2)),
+      footprintRadiusKm: Math.round(footprintRadiusKm),
+      periodMinutes: Number(periodMinutes.toFixed(1)),
+      inclinationDeg: Number(inclinationDeg.toFixed(2))
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * EXPERIMENTAL_VALIDATOR: Legacy Kepler/J2 perturbation approximation.
+ * Retained solely for secondary diagnostic cross-validation.
+ * NEVER CANONICAL: Canonical propagation is calculateSatellitePosition using satellite.js SGP4.
+ */
+export function calculatePositionExperimentalValidator(sat: SatelliteRecord, date: Date = new Date()): SatelliteRecord['calculated'] | null {
   try {
     if (!sat.line1 || !sat.line2) return null;
     const tle = parseTLE(sat.line1, sat.line2);
@@ -157,7 +225,7 @@ export function calculateSatellitePosition(sat: SatelliteRecord, date: Date = ne
     const r = a * (1 - tle.eccentricity * Math.cos(E));
 
     // Position in orbital plane
-    const u = omegaRad + nu; // Argument of latitude
+    const u = omegaRad + nu;
     const xOrb = r * Math.cos(u);
     const yOrb = r * Math.sin(u);
 
@@ -166,7 +234,7 @@ export function calculateSatellitePosition(sat: SatelliteRecord, date: Date = ne
     const yEci = xOrb * Math.sin(raanRad) + yOrb * Math.cos(incRad) * Math.cos(raanRad);
     const zEci = yOrb * Math.sin(incRad);
 
-    // Instantaneous Orbital Velocity (vis-viva equation)
+    // Instantaneous Orbital Velocity
     const velocityKmS = Math.sqrt(Math.max(0, EARTH_MU_KM3_S2 * (2 / r - 1 / a)));
 
     // Greenwich Mean Sidereal Time
@@ -177,7 +245,7 @@ export function calculateSatellitePosition(sat: SatelliteRecord, date: Date = ne
     const yEcef = -xEci * Math.sin(gmst) + yEci * Math.cos(gmst);
     const zEcef = zEci;
 
-    // Geodetic Latitude, Longitude, Altitude (WGS-84 Bowring algorithm)
+    // Geodetic Latitude, Longitude, Altitude
     const lonRad = Math.atan2(yEcef, xEcef);
     const pEcef = Math.sqrt(xEcef * xEcef + yEcef * yEcef);
     
@@ -194,14 +262,11 @@ export function calculateSatellitePosition(sat: SatelliteRecord, date: Date = ne
 
     const latitude = latRad * RAD_TO_DEG;
     let longitude = lonRad * RAD_TO_DEG;
-    // Normalize longitude -180 to 180
     while (longitude > 180) longitude -= 360;
     while (longitude < -180) longitude += 360;
 
-    // Ground footprint calculation (geometric visibility horizon radius in km)
     const horizonAngle = Math.acos(Math.min(0.999, EARTH_RADIUS_KM / (EARTH_RADIUS_KM + altitudeKm)));
     const footprintRadiusKm = EARTH_RADIUS_KM * horizonAngle;
-
     const periodMinutes = (24 * 60) / tle.meanMotionRevPerDay;
 
     return {
@@ -214,7 +279,6 @@ export function calculateSatellitePosition(sat: SatelliteRecord, date: Date = ne
       inclinationDeg: Number(tle.inclinationDeg.toFixed(2))
     };
   } catch (err) {
-    console.error(`Error in satellite propagator for ${sat.name}:`, err);
     return null;
   }
 }

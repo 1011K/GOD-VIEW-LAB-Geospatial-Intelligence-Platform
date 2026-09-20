@@ -21,7 +21,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'U.S. Energy Information Administration (EIA-860) / PJM',
     sourceUrl: 'https://www.eia.gov/electricity/data/browser/#/plant/63031',
     adapter: 'server/infrastructure_eia_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'EIA-63031'
   },
@@ -44,7 +44,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'Central Electricity Authority (CEA) / Tata Power Disclosures',
     sourceUrl: 'https://www.tatapower.com/businesses/generation.aspx',
     adapter: 'server/infrastructure_cea_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'CEA-IND-CGPL-01'
   },
@@ -67,7 +67,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'Reliance Industries Annual Regulatory Filings / MoPNG',
     sourceUrl: 'https://www.ril.com/businesses/oil-to-chemicals',
     adapter: 'server/infrastructure_ril_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'RIL-JMN-COGEN'
   },
@@ -90,7 +90,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'Karnataka Renewable Energy Development (KREDL) / TPREL',
     sourceUrl: 'https://www.tatapowerrenewables.com/',
     adapter: 'server/infrastructure_tprel_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'TPREL-PVG-400'
   },
@@ -114,7 +114,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'U.S. Nuclear Regulatory Commission (NRC) / EIA',
     sourceUrl: 'https://www.nrc.gov/info-finder/reactors/surry1.html',
     adapter: 'server/infrastructure_nrc_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'NRC-SUR-01'
   },
@@ -138,7 +138,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'U.S. Nuclear Regulatory Commission (NRC) / EIA',
     sourceUrl: 'https://www.nrc.gov/info-finder/reactors/na1.html',
     adapter: 'server/infrastructure_nrc_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'NRC-NA-01'
   },
@@ -160,7 +160,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'China Three Gorges Corp / International Hydropower Association',
     sourceUrl: 'https://www.ctg.com.cn/',
     adapter: 'server/infrastructure_hydro_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'IHA-CHN-TG-01'
   },
@@ -183,7 +183,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'U.S. Bureau of Reclamation / EIA',
     sourceUrl: 'https://www.usbr.gov/pn/grandcoulee/',
     adapter: 'server/infrastructure_usbr_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'USBR-GC-01'
   },
@@ -205,7 +205,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'The Crown Estate / UK National Grid ESO',
     sourceUrl: 'https://hornseaprojects.co.uk/',
     adapter: 'server/infrastructure_wind_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'UK-ESO-HORN2'
   },
@@ -227,7 +227,7 @@ export const POWER_PLANTS_DATA: InfrastructureRecord[] = [
     provider: 'State Grid Corporation of China (SGCC)',
     sourceUrl: 'http://www.sgcc.com.cn',
     adapter: 'server/infrastructure_wind_adapter',
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     status: 'STATIC_REFERENCE',
     raw_identifier: 'SGCC-GANSU-WIND'
   }

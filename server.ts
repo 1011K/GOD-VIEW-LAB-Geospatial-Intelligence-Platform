@@ -44,7 +44,7 @@ function getStale<T>(key: string): CacheEntry<T> | null {
   return null;
 }
 
-function setCache<T>(key: string, data: T, sourceUrl: string, provider: string, status: string = 'VERIFIED LIVE', error?: string): CacheEntry<T> {
+function setCache<T>(key: string, data: T, sourceUrl: string, provider: string, status: string = 'LIVE', error?: string): CacheEntry<T> {
   const entry: CacheEntry<T> = {
     data,
     timestamp: Date.now(),
@@ -55,6 +55,313 @@ function setCache<T>(key: string, data: T, sourceUrl: string, provider: string, 
   };
   cache[key] = entry;
   return entry;
+}
+
+// -------------------------------------------------------------
+// EMPIRICAL SOURCE OBSERVATION STORE (Zero-Assumption Health Telemetry)
+// -------------------------------------------------------------
+export interface SourceObservation {
+  id: string;
+  name: string;
+  provider: string;
+  endpoint: string;
+  status: 'NOT_CHECKED' | 'LIVE' | 'CACHED' | 'STALE' | 'STATIC_REFERENCE' | 'UNAVAILABLE' | 'NOT_CONFIGURED';
+  latency_ms: number | null;
+  latencyMs?: number | null;
+  item_count: number;
+  itemCount?: number;
+  last_attempt_at: string | null;
+  lastAttemptAt?: string | null;
+  last_success_at: string | null;
+  lastSuccessAt?: string | null;
+  last_updated: string | null;
+  freshness_seconds: number | null;
+  freshnessSeconds?: number | null;
+  cached: boolean;
+  stale: boolean;
+  cache_ttl_seconds: number;
+  auth_mode: string;
+  rate_limits: string;
+  error: string | null;
+}
+
+export const sourceObservations: Record<string, SourceObservation> = {
+  opensky: {
+    id: 'opensky',
+    name: 'ADS-B Live Flights',
+    provider: 'OpenSky Network',
+    endpoint: 'https://opensky-network.org/api/states/all',
+    status: 'NOT_CHECKED',
+    latency_ms: null,
+    latencyMs: null,
+    item_count: 0,
+    itemCount: 0,
+    last_attempt_at: null,
+    lastAttemptAt: null,
+    last_success_at: null,
+    lastSuccessAt: null,
+    last_updated: null,
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: false,
+    stale: false,
+    cache_ttl_seconds: 20,
+    auth_mode: 'public',
+    rate_limits: '10s refresh / 400 requests/day per unauthenticated IP',
+    error: null
+  },
+  celestrak: {
+    id: 'celestrak',
+    name: 'NORAD Satellite TLEs',
+    provider: 'CelesTrak (NORAD GP)',
+    endpoint: 'https://celestrak.org/NORAD/elements/gp.php',
+    status: 'NOT_CHECKED',
+    latency_ms: null,
+    latencyMs: null,
+    item_count: 0,
+    itemCount: 0,
+    last_attempt_at: null,
+    lastAttemptAt: null,
+    last_success_at: null,
+    lastSuccessAt: null,
+    last_updated: null,
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: false,
+    stale: false,
+    cache_ttl_seconds: 60,
+    auth_mode: 'public',
+    rate_limits: 'Standard web rate limits (60s cache enforced)',
+    error: null
+  },
+  usgs: {
+    id: 'usgs',
+    name: 'Global Seismic Feed',
+    provider: 'USGS Earthquake Hazards Program',
+    endpoint: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',
+    status: 'NOT_CHECKED',
+    latency_ms: null,
+    latencyMs: null,
+    item_count: 0,
+    itemCount: 0,
+    last_attempt_at: null,
+    lastAttemptAt: null,
+    last_success_at: null,
+    lastSuccessAt: null,
+    last_updated: null,
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: false,
+    stale: false,
+    cache_ttl_seconds: 30,
+    auth_mode: 'public',
+    rate_limits: 'Open public GeoJSON stream',
+    error: null
+  },
+  nasa_eonet: {
+    id: 'nasa_eonet',
+    name: 'Natural Hazards & Thermal Anomalies',
+    provider: 'NASA Earth Observatory (EONET v3)',
+    endpoint: 'https://eonet.gsfc.nasa.gov/api/v3/events',
+    status: 'NOT_CHECKED',
+    latency_ms: null,
+    latencyMs: null,
+    item_count: 0,
+    itemCount: 0,
+    last_attempt_at: null,
+    lastAttemptAt: null,
+    last_success_at: null,
+    lastSuccessAt: null,
+    last_updated: null,
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: false,
+    stale: false,
+    cache_ttl_seconds: 60,
+    auth_mode: 'public',
+    rate_limits: 'Unauthenticated Public (60s cache enforced)',
+    error: null
+  },
+  rainviewer: {
+    id: 'rainviewer',
+    name: 'Global Weather Radar & Clouds',
+    provider: 'RainViewer Radar API',
+    endpoint: 'https://api.rainviewer.com/public/weather-maps.json',
+    status: 'NOT_CHECKED',
+    latency_ms: null,
+    latencyMs: null,
+    item_count: 0,
+    itemCount: 0,
+    last_attempt_at: null,
+    lastAttemptAt: null,
+    last_success_at: null,
+    lastSuccessAt: null,
+    last_updated: null,
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: false,
+    stale: false,
+    cache_ttl_seconds: 60,
+    auth_mode: 'public',
+    rate_limits: '10,000 requests/day',
+    error: null
+  },
+  noaa_swpc: {
+    id: 'noaa_swpc',
+    name: 'NOAA Space Weather Telemetry',
+    provider: 'NOAA Space Weather Prediction Center (SWPC)',
+    endpoint: 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json',
+    status: 'NOT_CHECKED',
+    latency_ms: null,
+    latencyMs: null,
+    item_count: 0,
+    itemCount: 0,
+    last_attempt_at: null,
+    lastAttemptAt: null,
+    last_success_at: null,
+    lastSuccessAt: null,
+    last_updated: null,
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: false,
+    stale: false,
+    cache_ttl_seconds: 60,
+    auth_mode: 'public',
+    rate_limits: 'Open public JSON feed',
+    error: null
+  },
+  infrastructure: {
+    id: 'infrastructure',
+    name: 'Critical Infrastructure & Power Matrix (EIA-860)',
+    provider: 'EIA-860 / Global Energy Monitor / IAEA PRIS / TeleGeography',
+    endpoint: '/api/infrastructure',
+    status: 'STATIC_REFERENCE',
+    latency_ms: 0,
+    latencyMs: 0,
+    item_count: 45,
+    itemCount: 45,
+    last_attempt_at: '2024-06-01T00:00:00.000Z',
+    lastAttemptAt: '2024-06-01T00:00:00.000Z',
+    last_success_at: '2024-06-01T00:00:00.000Z',
+    lastSuccessAt: '2024-06-01T00:00:00.000Z',
+    last_updated: '2024-06-01T00:00:00.000Z',
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: true,
+    stale: false,
+    cache_ttl_seconds: 86400,
+    auth_mode: 'none',
+    rate_limits: 'Static Reference Baseline',
+    error: null
+  },
+  cameras: {
+    id: 'cameras',
+    name: 'Public Traffic & Port Webcams',
+    provider: 'Government Transport Agencies (Caltrans, NYSDOT, TfL, TfNSW, ACP, MLIT)',
+    endpoint: '/api/cameras',
+    status: 'STATIC_REFERENCE',
+    latency_ms: 0,
+    latencyMs: 0,
+    item_count: PUBLIC_CAMERAS_DATA.length,
+    itemCount: PUBLIC_CAMERAS_DATA.length,
+    last_attempt_at: '2024-06-01T00:00:00.000Z',
+    lastAttemptAt: '2024-06-01T00:00:00.000Z',
+    last_success_at: '2024-06-01T00:00:00.000Z',
+    lastSuccessAt: '2024-06-01T00:00:00.000Z',
+    last_updated: '2024-06-01T00:00:00.000Z',
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: true,
+    stale: false,
+    cache_ttl_seconds: 30,
+    auth_mode: 'public',
+    rate_limits: 'Per-agency public CCTV image refresh (15-60s)',
+    error: null
+  },
+  vessels: {
+    id: 'vessels',
+    name: 'Marine AIS Vessel Stream',
+    provider: 'Fintraffic / Digitraffic Live Marine AIS',
+    endpoint: '/api/vessels',
+    status: 'NOT_CHECKED',
+    latency_ms: null,
+    latencyMs: null,
+    item_count: 0,
+    itemCount: 0,
+    last_attempt_at: null,
+    lastAttemptAt: null,
+    last_success_at: null,
+    lastSuccessAt: null,
+    last_updated: null,
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: false,
+    stale: false,
+    cache_ttl_seconds: 15,
+    auth_mode: 'public',
+    rate_limits: 'Digitraffic unauthenticated public stream',
+    error: null
+  },
+  gdelt: {
+    id: 'gdelt',
+    name: 'GDELT 2.0 Global OSINT',
+    provider: 'GDELT Project (DOC 2.0 API)',
+    endpoint: 'https://api.gdeltproject.org/api/v2/doc/doc',
+    status: 'NOT_CHECKED',
+    latency_ms: null,
+    latencyMs: null,
+    item_count: 0,
+    itemCount: 0,
+    last_attempt_at: null,
+    lastAttemptAt: null,
+    last_success_at: null,
+    lastSuccessAt: null,
+    last_updated: null,
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: false,
+    stale: false,
+    cache_ttl_seconds: 60,
+    auth_mode: 'public',
+    rate_limits: 'Standard public web API',
+    error: null
+  },
+  macro: {
+    id: 'macro',
+    name: 'Global Macroeconomic Telemetry',
+    provider: 'CoinGecko Global Feed',
+    endpoint: 'https://api.coingecko.com/api/v3/simple/price',
+    status: 'NOT_CHECKED',
+    latency_ms: null,
+    latencyMs: null,
+    item_count: 0,
+    itemCount: 0,
+    last_attempt_at: null,
+    lastAttemptAt: null,
+    last_success_at: null,
+    lastSuccessAt: null,
+    last_updated: null,
+    freshness_seconds: null,
+    freshnessSeconds: null,
+    cached: false,
+    stale: false,
+    cache_ttl_seconds: 60,
+    auth_mode: 'public',
+    rate_limits: 'CoinGecko public tier (30 calls/min)',
+    error: null
+  }
+};
+
+export function recordObservation(id: string, updates: Partial<SourceObservation>) {
+  if (sourceObservations[id]) {
+    const target = sourceObservations[id];
+    Object.assign(target, updates);
+    if (updates.latency_ms !== undefined) target.latencyMs = updates.latency_ms;
+    if (updates.item_count !== undefined) target.itemCount = updates.item_count;
+    if (updates.last_attempt_at !== undefined) target.lastAttemptAt = updates.last_attempt_at;
+    if (updates.last_success_at !== undefined) target.lastSuccessAt = updates.last_success_at;
+    if (updates.freshness_seconds !== undefined) target.freshnessSeconds = updates.freshness_seconds;
+  }
 }
 
 // -------------------------------------------------------------
@@ -229,6 +536,14 @@ app.get('/api/flights', async (req, res) => {
   const cacheKey = 'opensky_flights';
   const cached = getCached<any[]>(cacheKey, 20000); // 20s cache
   if (cached) {
+    recordObservation('opensky', {
+      status: 'CACHED',
+      latency_ms: 0,
+      item_count: cached.data.length,
+      last_attempt_at: new Date().toISOString(),
+      cached: true,
+      stale: false
+    });
     return res.json({
       success: true,
       cached: true,
@@ -242,6 +557,7 @@ app.get('/api/flights', async (req, res) => {
   }
 
   const endpoint = 'https://opensky-network.org/api/states/all';
+  const startTime = Date.now();
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
@@ -261,34 +577,50 @@ app.get('/api/flights', async (req, res) => {
     });
     clearTimeout(timeout);
 
+    const elapsed = Date.now() - startTime;
+
     if (!response.ok) {
-      if (response.status === 429) {
-        const stale = getStale<any[]>(cacheKey);
-        if (stale && stale.data && stale.data.length > 0) {
-          return res.json({
-            success: true,
-            cached: true,
-            stale: true,
-            status: 'CACHED (RATE LIMITED)',
-            provider: 'OpenSky Network',
-            sourceUrl: endpoint,
-            fetched_at: new Date(stale.timestamp).toISOString(),
-            count: stale.data.length,
-            data: stale.data
-          });
-        }
+      const stale = getStale<any[]>(cacheKey);
+      if (stale && stale.data && stale.data.length > 0) {
+        recordObservation('opensky', {
+          status: 'STALE',
+          latency_ms: elapsed,
+          item_count: stale.data.length,
+          last_attempt_at: new Date().toISOString(),
+          cached: true,
+          stale: true,
+          error: `OpenSky rate limit (HTTP ${response.status}) - serving stale cache`
+        });
         return res.json({
           success: true,
-          status: 'SOURCE UNAVAILABLE',
+          cached: true,
+          stale: true,
+          status: 'STALE',
           provider: 'OpenSky Network',
           sourceUrl: endpoint,
-          error: 'OpenSky Network public rate limit reached (HTTP 429). Waiting for cooldown.',
-          fetched_at: new Date().toISOString(),
-          count: 0,
-          data: []
+          fetched_at: new Date(stale.timestamp).toISOString(),
+          count: stale.data.length,
+          data: stale.data
         });
       }
-      throw new Error(`OpenSky returned HTTP ${response.status}: ${response.statusText}`);
+      recordObservation('opensky', {
+        status: 'UNAVAILABLE',
+        latency_ms: elapsed,
+        item_count: 0,
+        last_attempt_at: new Date().toISOString(),
+        cached: false,
+        stale: false,
+        error: `OpenSky returned HTTP ${response.status}: ${response.statusText}`
+      });
+      return res.status(503).json({
+        success: false,
+        status: 'UNAVAILABLE',
+        provider: 'OpenSky Network',
+        sourceUrl: endpoint,
+        error: `OpenSky returned HTTP ${response.status}: ${response.statusText}`,
+        count: 0,
+        data: []
+      });
     }
 
     const json = await response.json();
@@ -297,7 +629,7 @@ app.get('/api/flights', async (req, res) => {
     // Transform OpenSky state vector arrays to typed records
     const flights = rawStates
       .filter((s: any[]) => s[5] !== null && s[6] !== null && typeof s[5] === 'number' && typeof s[6] === 'number')
-      .slice(0, 500) // Sample top active tracks for smooth client rendering
+      .slice(0, 500)
       .map((s: any[]) => ({
         icao24: String(s[0] || '').trim(),
         callsign: String(s[1] || '').trim() || `ICAO-${s[0]}`,
@@ -319,11 +651,22 @@ app.get('/api/flights', async (req, res) => {
         sourceUrl: endpoint,
         adapter: 'server/opensky_adapter',
         fetched_at: new Date().toISOString(),
-        status: 'VERIFIED LIVE',
+        status: 'LIVE',
         raw_identifier: String(s[0] || '')
       }));
 
-    setCache(cacheKey, flights, endpoint, 'OpenSky Network', 'VERIFIED LIVE');
+    setCache(cacheKey, flights, endpoint, 'OpenSky Network', 'LIVE');
+    recordObservation('opensky', {
+      status: 'LIVE',
+      latency_ms: elapsed,
+      item_count: flights.length,
+      last_attempt_at: new Date().toISOString(),
+      last_success_at: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: null
+    });
 
     return res.json({
       success: true,
@@ -331,19 +674,29 @@ app.get('/api/flights', async (req, res) => {
       fetched_at: new Date().toISOString(),
       provider: 'OpenSky Network',
       sourceUrl: endpoint,
-      status: 'VERIFIED LIVE',
+      status: 'LIVE',
       count: flights.length,
       data: flights
     });
   } catch (err: any) {
+    const elapsed = Date.now() - startTime;
     console.warn('Flights fetch notice:', err.message);
     const stale = getStale<any[]>(cacheKey);
     if (stale && stale.data && stale.data.length > 0) {
+      recordObservation('opensky', {
+        status: 'STALE',
+        latency_ms: elapsed,
+        item_count: stale.data.length,
+        last_attempt_at: new Date().toISOString(),
+        cached: true,
+        stale: true,
+        error: `OpenSky unreachable (${err.message}): serving stale cache`
+      });
       return res.json({
         success: true,
         cached: true,
         stale: true,
-        status: 'CACHED (UPSTREAM RECONNECTING)',
+        status: 'STALE',
         provider: 'OpenSky Network',
         sourceUrl: endpoint,
         fetched_at: new Date(stale.timestamp).toISOString(),
@@ -351,13 +704,21 @@ app.get('/api/flights', async (req, res) => {
         data: stale.data
       });
     }
-    return res.json({
-      success: true,
-      status: 'SOURCE UNAVAILABLE',
+    recordObservation('opensky', {
+      status: 'UNAVAILABLE',
+      latency_ms: elapsed,
+      item_count: 0,
+      last_attempt_at: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: `OpenSky feed unreachable: ${err.message}`
+    });
+    return res.status(503).json({
+      success: false,
+      status: 'UNAVAILABLE',
       provider: 'OpenSky Network',
       sourceUrl: endpoint,
       error: `OpenSky feed unreachable: ${err.message}`,
-      fetched_at: new Date().toISOString(),
       count: 0,
       data: []
     });
@@ -370,6 +731,14 @@ app.get('/api/satellites', async (req, res) => {
   const cacheKey = `celestrak_${group}`;
   const cached = getCached<any[]>(cacheKey, 60000); // 60s cache
   if (cached) {
+    recordObservation('celestrak', {
+      status: 'CACHED',
+      latency_ms: 0,
+      item_count: cached.data.length,
+      last_attempt_at: new Date().toISOString(),
+      cached: true,
+      stale: false
+    });
     return res.json({
       success: true,
       cached: true,
@@ -387,6 +756,7 @@ app.get('/api/satellites', async (req, res) => {
     `https://celestrak.com/NORAD/elements/gp.php?GROUP=${encodeURIComponent(group)}&FORMAT=tle`
   ];
 
+  const startTime = Date.now();
   let lastError = '';
   for (const endpoint of endpoints) {
     try {
@@ -425,7 +795,7 @@ app.get('/api/satellites', async (req, res) => {
               sourceUrl: endpoint,
               adapter: 'server/celestrak_adapter',
               fetched_at: new Date().toISOString(),
-              status: 'VERIFIED LIVE',
+              status: 'LIVE',
               raw_identifier: `NORAD-${noradId}`
             });
           }
@@ -433,7 +803,19 @@ app.get('/api/satellites', async (req, res) => {
       }
 
       if (satellites.length > 0) {
-        setCache(cacheKey, satellites, endpoint, 'CelesTrak (NORAD GP)', 'VERIFIED LIVE');
+        const elapsed = Date.now() - startTime;
+        setCache(cacheKey, satellites, endpoint, 'CelesTrak (NORAD GP)', 'LIVE');
+        recordObservation('celestrak', {
+          status: 'LIVE',
+          latency_ms: elapsed,
+          item_count: satellites.length,
+          last_attempt_at: new Date().toISOString(),
+          last_success_at: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+          cached: false,
+          stale: false,
+          error: null
+        });
 
         return res.json({
           success: true,
@@ -441,7 +823,7 @@ app.get('/api/satellites', async (req, res) => {
           fetched_at: new Date().toISOString(),
           provider: 'CelesTrak (NORAD GP)',
           sourceUrl: endpoint,
-          status: 'VERIFIED LIVE',
+          status: 'LIVE',
           count: satellites.length,
           data: satellites
         });
@@ -452,13 +834,23 @@ app.get('/api/satellites', async (req, res) => {
     }
   }
 
+  const elapsed = Date.now() - startTime;
   const stale = getStale<any[]>(cacheKey);
   if (stale && stale.data && stale.data.length > 0) {
+    recordObservation('celestrak', {
+      status: 'STALE',
+      latency_ms: elapsed,
+      item_count: stale.data.length,
+      last_attempt_at: new Date().toISOString(),
+      cached: true,
+      stale: true,
+      error: `CelesTrak unreachable (${lastError}): serving stale cache`
+    });
     return res.json({
       success: true,
       cached: true,
       stale: true,
-      status: 'CACHED (UPSTREAM RECONNECTING)',
+      status: 'STALE',
       provider: 'CelesTrak (NORAD GP)',
       sourceUrl: endpoints[0],
       fetched_at: new Date(stale.timestamp).toISOString(),
@@ -467,13 +859,22 @@ app.get('/api/satellites', async (req, res) => {
     });
   }
 
-  return res.json({
-    success: true,
-    status: 'SOURCE UNAVAILABLE',
+  recordObservation('celestrak', {
+    status: 'UNAVAILABLE',
+    latency_ms: elapsed,
+    item_count: 0,
+    last_attempt_at: new Date().toISOString(),
+    cached: false,
+    stale: false,
+    error: `CelesTrak feed unreachable: ${lastError}`
+  });
+
+  return res.status(503).json({
+    success: false,
+    status: 'UNAVAILABLE',
     provider: 'CelesTrak (NORAD GP)',
     sourceUrl: endpoints[0],
     error: `CelesTrak feed unreachable: ${lastError}`,
-    fetched_at: new Date().toISOString(),
     count: 0,
     data: []
   });
@@ -705,6 +1106,14 @@ app.get(['/api/weather/radar', '/api/radar/info'], async (req, res) => {
   const cacheKey = 'rainviewer_radar';
   const cached = getCached<any>(cacheKey, 60000); // 1m cache
   if (cached) {
+    recordObservation('rainviewer', {
+      status: 'CACHED',
+      latency_ms: 0,
+      item_count: cached.data?.radar?.past?.length || 0,
+      last_attempt_at: new Date().toISOString(),
+      cached: true,
+      stale: false
+    });
     return res.json({
       success: true,
       cached: true,
@@ -717,6 +1126,7 @@ app.get(['/api/weather/radar', '/api/radar/info'], async (req, res) => {
   }
 
   const endpoint = 'https://api.rainviewer.com/public/weather-maps.json';
+  const startTime = Date.now();
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
@@ -726,6 +1136,8 @@ app.get(['/api/weather/radar', '/api/radar/info'], async (req, res) => {
       headers: { 'User-Agent': 'GOD-VIEW-LAB-GeospatialPlatform/1.0' }
     });
     clearTimeout(timeout);
+
+    const elapsed = Date.now() - startTime;
 
     if (!response.ok) {
       throw new Error(`RainViewer returned HTTP ${response.status}`);
@@ -746,10 +1158,21 @@ app.get(['/api/weather/radar', '/api/radar/info'], async (req, res) => {
       sourceUrl: endpoint,
       adapter: 'server/rainviewer_adapter',
       fetched_at: new Date().toISOString(),
-      status: 'VERIFIED LIVE'
+      status: 'LIVE'
     };
 
-    setCache(cacheKey, radarData, endpoint, 'RainViewer Global Radar API', 'VERIFIED LIVE');
+    setCache(cacheKey, radarData, endpoint, 'RainViewer Global Radar API', 'LIVE');
+    recordObservation('rainviewer', {
+      status: 'LIVE',
+      latency_ms: elapsed,
+      item_count: radarData.radar.past.length,
+      last_attempt_at: new Date().toISOString(),
+      last_success_at: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: null
+    });
 
     return res.json({
       success: true,
@@ -757,31 +1180,49 @@ app.get(['/api/weather/radar', '/api/radar/info'], async (req, res) => {
       fetched_at: new Date().toISOString(),
       provider: 'RainViewer Global Radar API',
       sourceUrl: endpoint,
-      status: 'VERIFIED LIVE',
+      status: 'LIVE',
       data: radarData
     });
   } catch (err: any) {
+    const elapsed = Date.now() - startTime;
     console.warn('RainViewer fetch notice:', err.message);
     const stale = getStale<any>(cacheKey);
     if (stale && stale.data) {
+      recordObservation('rainviewer', {
+        status: 'STALE',
+        latency_ms: elapsed,
+        item_count: stale.data?.radar?.past?.length || 0,
+        last_attempt_at: new Date().toISOString(),
+        cached: true,
+        stale: true,
+        error: `RainViewer unreachable (${err.message}): serving stale cache`
+      });
       return res.json({
         success: true,
         cached: true,
         stale: true,
-        status: 'CACHED (UPSTREAM RECONNECTING)',
+        status: 'STALE',
         provider: 'RainViewer Global Radar API',
         sourceUrl: endpoint,
         fetched_at: new Date(stale.timestamp).toISOString(),
         data: stale.data
       });
     }
-    return res.json({
-      success: true,
-      status: 'SOURCE UNAVAILABLE',
+    recordObservation('rainviewer', {
+      status: 'UNAVAILABLE',
+      latency_ms: elapsed,
+      item_count: 0,
+      last_attempt_at: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: `RainViewer radar feed unreachable: ${err.message}`
+    });
+    return res.status(503).json({
+      success: false,
+      status: 'UNAVAILABLE',
       provider: 'RainViewer Global Radar API',
       sourceUrl: endpoint,
       error: `RainViewer radar feed unreachable: ${err.message}`,
-      fetched_at: new Date().toISOString(),
       data: null
     });
   }
@@ -792,6 +1233,14 @@ app.get('/api/space-weather', async (req, res) => {
   const cacheKey = 'noaa_swpc_planetary_k';
   const cached = getCached<any>(cacheKey, 60000);
   if (cached) {
+    recordObservation('noaa_swpc', {
+      status: 'CACHED',
+      latency_ms: 0,
+      item_count: 1,
+      last_attempt_at: new Date().toISOString(),
+      cached: true,
+      stale: false
+    });
     return res.json({
       success: true,
       cached: true,
@@ -804,6 +1253,7 @@ app.get('/api/space-weather', async (req, res) => {
   }
 
   const endpoint = 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json';
+  const startTime = Date.now();
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
@@ -812,6 +1262,8 @@ app.get('/api/space-weather', async (req, res) => {
       headers: { 'User-Agent': 'GOD-VIEW-LAB-GeospatialPlatform/1.0' }
     });
     clearTimeout(timeout);
+
+    const elapsed = Date.now() - startTime;
 
     if (!response.ok) {
       throw new Error(`NOAA SWPC returned HTTP ${response.status}`);
@@ -834,6 +1286,17 @@ app.get('/api/space-weather', async (req, res) => {
     };
 
     setCache(cacheKey, result, endpoint, 'NOAA Space Weather Prediction Center (SWPC)', 'LIVE');
+    recordObservation('noaa_swpc', {
+      status: 'LIVE',
+      latency_ms: elapsed,
+      item_count: 1,
+      last_attempt_at: new Date().toISOString(),
+      last_success_at: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: null
+    });
 
     return res.json({
       success: true,
@@ -845,10 +1308,23 @@ app.get('/api/space-weather', async (req, res) => {
       data: result
     });
   } catch (err: any) {
+    const elapsed = Date.now() - startTime;
+    recordObservation('noaa_swpc', {
+      status: 'UNAVAILABLE',
+      latency_ms: elapsed,
+      item_count: 0,
+      last_attempt_at: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: `NOAA SWPC space weather feed unreachable: ${err.message}`
+    });
     return res.status(503).json({
       success: false,
-      status: 'SOURCE UNAVAILABLE',
-      error: `NOAA SWPC space weather feed unreachable: ${err.message}`
+      status: 'UNAVAILABLE',
+      provider: 'NOAA Space Weather Prediction Center (SWPC)',
+      sourceUrl: endpoint,
+      error: `NOAA SWPC space weather feed unreachable: ${err.message}`,
+      data: null
     });
   }
 });
@@ -871,8 +1347,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'IAEA Power Reactor Information System (PRIS)',
       sourceUrl: 'https://pris.iaea.org/PRIS/',
       adapter: 'server/infrastructure_gem_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'IAEA-PRIS-JP-001'
     },
     {
@@ -890,8 +1366,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'IAEA Power Reactor Information System (PRIS)',
       sourceUrl: 'https://pris.iaea.org/PRIS/',
       adapter: 'server/infrastructure_gem_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'IAEA-PRIS-CA-001'
     },
     {
@@ -909,8 +1385,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'IAEA Power Reactor Information System (PRIS)',
       sourceUrl: 'https://pris.iaea.org/PRIS/',
       adapter: 'server/infrastructure_gem_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'IAEA-PRIS-UA-006'
     },
     {
@@ -928,8 +1404,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'IAEA PRIS',
       sourceUrl: 'https://pris.iaea.org/PRIS/',
       adapter: 'server/infrastructure_gem_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'IAEA-PRIS-FR-012'
     },
     {
@@ -947,8 +1423,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'IAEA PRIS / ENEC',
       sourceUrl: 'https://pris.iaea.org/PRIS/',
       adapter: 'server/infrastructure_gem_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'IAEA-PRIS-AE-001'
     },
     // Hyperscale AI & Cloud Datacenters
@@ -967,8 +1443,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'Loudoun Economic Development / OpenStreetMap Infrastructure',
       sourceUrl: 'https://biz.loudoun.gov/',
       adapter: 'server/infrastructure_dc_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'DC-US-VA-001'
     },
     {
@@ -986,8 +1462,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'EirGrid / OpenStreetMap Infrastructure',
       sourceUrl: 'https://www.eirgridgroup.com/',
       adapter: 'server/infrastructure_dc_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'DC-IE-DUB-001'
     },
     {
@@ -1005,8 +1481,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'IMDA Singapore',
       sourceUrl: 'https://www.imda.gov.sg/',
       adapter: 'server/infrastructure_dc_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'DC-SG-JUR-001'
     },
     // Subsea Cable Landing Hubs
@@ -1025,8 +1501,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'TeleGeography Submarine Cable Registry',
       sourceUrl: 'https://www.submarinecablemap.com/',
       adapter: 'server/infrastructure_cable_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'CBL-UK-BUDE'
     },
     {
@@ -1044,8 +1520,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'TeleGeography Submarine Cable Registry',
       sourceUrl: 'https://www.submarinecablemap.com/',
       adapter: 'server/infrastructure_cable_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'CBL-FR-MRS'
     },
     // Space Launch Facilities
@@ -1064,8 +1540,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'NASA / FAA Office of Commercial Space Transportation',
       sourceUrl: 'https://www.faa.gov/space',
       adapter: 'server/infrastructure_space_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'PORT-US-KSC'
     },
     {
@@ -1083,8 +1559,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'ESA / CNES Spaceport Registry',
       sourceUrl: 'https://www.esa.int/Enabling_Support/Space_Transportation/Europe_s_Spaceport',
       adapter: 'server/infrastructure_space_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'PORT-FR-CSG'
     },
     // Strategic Maritime Ports
@@ -1103,8 +1579,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'World Port Source / Port of Rotterdam',
       sourceUrl: 'https://www.portofrotterdam.com/',
       adapter: 'server/maritime_port_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'PORT-NL-RTM'
     },
     {
@@ -1122,8 +1598,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'Maritime and Port Authority of Singapore (MPA)',
       sourceUrl: 'https://www.mpa.gov.sg/',
       adapter: 'server/maritime_port_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'PORT-SG-SIN'
     },
     {
@@ -1141,8 +1617,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'SIPG / Ministry of Transport of China',
       sourceUrl: 'https://www.portshanghai.com.cn/',
       adapter: 'server/maritime_port_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'PORT-CN-SHA'
     },
     {
@@ -1160,8 +1636,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'Port of Los Angeles Official Portal',
       sourceUrl: 'https://www.portoflosangeles.org/',
       adapter: 'server/maritime_port_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'STATIC DATA',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'PORT-US-LAX'
     },
     // Official Public Infrastructure & Meteorological Transport Cameras
@@ -1180,8 +1656,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'IBB Metropolitan Traffic & Coastal Safety',
       sourceUrl: 'https://uym.ibb.gov.tr',
       adapter: 'server/transport_camera_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'VERIFIED LIVE',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'CAM-TR-IST-01',
       streamUrl: 'https://uym.ibb.gov.tr'
     },
@@ -1200,8 +1676,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'Autoridad del Canal de Panamá (ACP)',
       sourceUrl: 'https://multimedia.panama-canal.com/',
       adapter: 'server/transport_camera_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'VERIFIED LIVE',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'CAM-PA-MIRA-01',
       streamUrl: 'https://multimedia.panama-canal.com/'
     },
@@ -1220,8 +1696,8 @@ const BASE_INFRASTRUCTURE_LIST = [
       provider: 'Ministry of Land, Infrastructure, Transport and Tourism (MLIT)',
       sourceUrl: 'https://www.kouwan.metro.tokyo.lg.jp',
       adapter: 'server/transport_camera_adapter',
-      fetched_at: new Date().toISOString(),
-      status: 'VERIFIED LIVE',
+      fetched_at: '2024-06-01T00:00:00.000Z',
+      status: 'STATIC_REFERENCE',
       raw_identifier: 'CAM-JP-TYO-01',
       streamUrl: 'https://www.kouwan.metro.tokyo.lg.jp'
     }
@@ -1230,7 +1706,6 @@ const BASE_INFRASTRUCTURE_LIST = [
   const FULL_INFRASTRUCTURE = [...BASE_INFRASTRUCTURE_LIST, ...POWER_PLANTS_DATA];
 
   app.get('/api/infrastructure', (req, res) => {
-    // Query filtering by ID or EIA ID (e.g. ?id=63031 or ?id=power-63031)
     const targetId = req.query.id as string;
     if (targetId) {
       const found = FULL_INFRASTRUCTURE.filter(
@@ -1240,16 +1715,15 @@ const BASE_INFRASTRUCTURE_LIST = [
       );
       return res.json({
         success: true,
-        fetched_at: new Date().toISOString(),
+        fetched_at: '2024-06-01T00:00:00.000Z',
         provider: 'Global Energy Monitor / EIA / IAEA PRIS',
         sourceUrl: 'https://www.eia.gov',
-        status: 'STATIC DATA',
+        status: 'STATIC_REFERENCE',
         count: found.length,
         data: found
       });
     }
 
-    // Filter by type if requested
     const typeFilter = req.query.type as string;
     const filtered = typeFilter 
       ? FULL_INFRASTRUCTURE.filter(item => item.type.toLowerCase() === typeFilter.toLowerCase())
@@ -1257,15 +1731,14 @@ const BASE_INFRASTRUCTURE_LIST = [
 
     return res.json({
       success: true,
-      fetched_at: new Date().toISOString(),
+      fetched_at: '2024-06-01T00:00:00.000Z',
       provider: 'Global Energy Monitor / IAEA PRIS / TeleGeography / EIA-860',
       sourceUrl: 'https://globalenergymonitor.org',
-      status: 'STATIC DATA',
+      status: 'STATIC_REFERENCE',
       count: filtered.length,
       data: filtered
     });
   });
-
 
 // Direct Power Plant Lookup (Argos Atlas #power=63031 benchmark support)
 app.get('/api/power/:id', (req, res) => {
@@ -1279,18 +1752,22 @@ app.get('/api/power/:id', (req, res) => {
   if (!found) {
     return res.status(404).json({
       success: false,
-      status: 'SOURCE UNAVAILABLE',
+      status: 'UNAVAILABLE',
       error: `Power plant identifier '${req.params.id}' not found in verified registry. Fail closed per strict Zero-Fake-Data policy.`
     });
   }
 
   return res.json({
     success: true,
-    status: found.status,
+    status: 'STATIC_REFERENCE',
     provider: found.provider,
     sourceUrl: found.sourceUrl,
-    fetched_at: new Date().toISOString(),
-    data: found
+    fetched_at: '2024-06-01T00:00:00.000Z',
+    data: {
+      ...found,
+      status: 'STATIC_REFERENCE',
+      fetched_at: '2024-06-01T00:00:00.000Z'
+    }
   });
 });
 
@@ -1302,10 +1779,10 @@ app.get('/api/power/:id', (req, res) => {
 app.get('/api/companies', (req, res) => {
   return res.json({
     success: true,
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     provider: 'ASTRA Corporate Registry / SEC EDGAR / NSE / CERC',
     sourceUrl: 'https://www.sec.gov/edgar',
-    status: 'VERIFIED LIVE',
+    status: 'STATIC_REFERENCE',
     count: COMPANIES_DATA.length,
     data: COMPANIES_DATA
   });
@@ -1317,6 +1794,7 @@ app.get('/api/companies/search', (req, res) => {
   if (!q) {
     return res.json({
       success: true,
+      status: 'STATIC_REFERENCE',
       count: COMPANIES_DATA.length,
       data: COMPANIES_DATA
     });
@@ -1338,6 +1816,7 @@ app.get('/api/companies/search', (req, res) => {
   return res.json({
     success: true,
     query: q,
+    status: 'STATIC_REFERENCE',
     count: matches.length,
     data: matches
   });
@@ -1353,18 +1832,22 @@ app.get('/api/companies/:id', (req, res) => {
   if (!company) {
     return res.status(404).json({
       success: false,
-      status: 'SOURCE UNAVAILABLE',
+      status: 'UNAVAILABLE',
       error: `Company entity '${req.params.id}' not resolved in verified corporate registry.`
     });
   }
 
   return res.json({
     success: true,
-    status: company.status,
+    status: 'STATIC_REFERENCE',
     provider: company.provider,
     sourceUrl: company.sourceUrl,
-    fetched_at: new Date().toISOString(),
-    data: company
+    fetched_at: '2024-06-01T00:00:00.000Z',
+    data: {
+      ...company,
+      status: 'STATIC_REFERENCE',
+      fetched_at: '2024-06-01T00:00:00.000Z'
+    }
   });
 });
 
@@ -1379,7 +1862,6 @@ app.get('/api/cameras', (req, res) => {
 
   let cameras = PUBLIC_CAMERAS_DATA;
 
-  // Viewport bounding box filtering when provided
   if (rawMinLat !== undefined || rawMaxLat !== undefined || rawMinLon !== undefined || rawMaxLon !== undefined) {
     const minLat = parseFloat(rawMinLat as string);
     const maxLat = parseFloat(rawMaxLat as string);
@@ -1401,7 +1883,7 @@ app.get('/api/cameras', (req, res) => {
 
   return res.json({
     success: true,
-    fetched_at: new Date().toISOString(),
+    fetched_at: '2024-06-01T00:00:00.000Z',
     provider: 'Government Transport Agencies (Caltrans / NYSDOT / TfL / TfNSW / MLIT / ACP)',
     sourceUrl: 'https://cwwp2.dot.ca.gov',
     status: 'STATIC_REFERENCE',
@@ -1410,7 +1892,7 @@ app.get('/api/cameras', (req, res) => {
   });
 });
 
-// Camera Status Validation (Probes Upstream Image Responsiveness)
+// Camera Status Validation (Probes Upstream Image/Stream Responsiveness)
 app.all('/api/cameras/check-status', async (req, res) => {
   const cameraId = (req.query.camera_id || req.query.id || req.body?.camera_id || req.body?.id) as string;
   const directUrl = (req.query.url || req.body?.url) as string;
@@ -1424,48 +1906,71 @@ app.all('/api/cameras/check-status', async (req, res) => {
 
   let mediaUrl = directUrl;
   let targetId = cameraId || 'custom-stream';
+  let targetCamera = cameraId ? PUBLIC_CAMERAS_DATA.find(c => c.camera_id === cameraId) : undefined;
 
   if (cameraId) {
-    const camera = PUBLIC_CAMERAS_DATA.find(c => c.camera_id === cameraId);
-    if (!camera) {
+    if (!targetCamera) {
       return res.status(404).json({
         success: false,
-        status: 'SOURCE UNAVAILABLE',
+        status: 'UNAVAILABLE',
         error: `Camera '${cameraId}' not found in public camera registry.`
       });
     }
-    mediaUrl = camera.media_url;
+    mediaUrl = targetCamera.media_url;
   }
 
+  const startTime = Date.now();
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
     const headRes = await fetch(mediaUrl, { 
       method: 'HEAD',
-      signal: controller.signal
+      signal: controller.signal,
+      headers: { 'User-Agent': 'GOD-VIEW-LAB-GeospatialPlatform/1.0' }
     });
     clearTimeout(timeout);
 
+    const elapsed = Date.now() - startTime;
     const isOk = headRes.ok;
+    const contentType = headRes.headers.get('content-type') || '';
+    // HEAD 200 is REACHABLE. For verified snapshot image content, it is LIVE.
+    const status = isOk ? (contentType.startsWith('image/') ? 'LIVE' : 'REACHABLE') : 'UNAVAILABLE';
+    const checkTime = new Date().toISOString();
+
+    if (targetCamera) {
+      targetCamera.status = status as any;
+      targetCamera.last_verified_at = checkTime;
+    }
+
     return res.json({
-      success: true,
+      success: isOk,
       camera_id: targetId,
-      status: isOk ? 'LIVE' : 'UNAVAILABLE',
-      is_live: isOk,
+      status,
+      is_live: status === 'LIVE',
+      is_reachable: isOk,
+      latency_ms: elapsed,
       http_status: headRes.status,
-      content_type: headRes.headers.get('content-type'),
-      checked_at: new Date().toISOString(),
-      last_verified_at: new Date().toISOString()
+      content_type: contentType,
+      checked_at: checkTime,
+      last_verified_at: checkTime
     });
   } catch (err: any) {
+    const elapsed = Date.now() - startTime;
+    const checkTime = new Date().toISOString();
+    if (targetCamera) {
+      targetCamera.status = 'UNAVAILABLE';
+      targetCamera.last_verified_at = checkTime;
+    }
     return res.json({
-      success: true,
+      success: false,
       camera_id: targetId,
       status: 'UNAVAILABLE',
       is_live: false,
+      is_reachable: false,
+      latency_ms: elapsed,
       error: `Upstream feed verification timed out or unreachable: ${err.message}`,
-      checked_at: new Date().toISOString(),
-      last_verified_at: new Date().toISOString()
+      checked_at: checkTime,
+      last_verified_at: checkTime
     });
   }
 });
@@ -1477,6 +1982,14 @@ app.get('/api/vessels', async (req, res) => {
   const cacheKey = 'digitraffic_ais_vessels';
   const cached = getCached<any[]>(cacheKey, 30000); // 30s cache window
   if (cached) {
+    recordObservation('vessels', {
+      status: 'CACHED',
+      latency_ms: 0,
+      item_count: cached.data.length,
+      last_attempt_at: new Date().toISOString(),
+      cached: true,
+      stale: false
+    });
     return res.json({
       success: true,
       cached: true,
@@ -1490,6 +2003,7 @@ app.get('/api/vessels', async (req, res) => {
   }
 
   const endpoint = 'https://meri.digitraffic.fi/api/ais/v1/locations';
+  const startTime = Date.now();
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
@@ -1503,10 +2017,23 @@ app.get('/api/vessels', async (req, res) => {
     });
     clearTimeout(timeout);
 
+    const elapsed = Date.now() - startTime;
+
     if (!response.ok) {
+      recordObservation('vessels', {
+        status: 'UNAVAILABLE',
+        latency_ms: elapsed,
+        item_count: 0,
+        last_attempt_at: new Date().toISOString(),
+        cached: false,
+        stale: false,
+        error: `Digitraffic AIS feed returned HTTP ${response.status}`
+      });
       return res.status(503).json({
         success: false,
-        status: 'SOURCE UNAVAILABLE',
+        status: 'UNAVAILABLE',
+        provider: 'Fintraffic / Digitraffic Live Marine AIS',
+        sourceUrl: endpoint,
         error: `Digitraffic AIS feed returned HTTP ${response.status}. Strict Zero-Fake-Data forbids synthetic/static vessel fallback.`
       });
     }
@@ -1514,7 +2041,6 @@ app.get('/api/vessels', async (req, res) => {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // Check if gzipped
     let decompressed: string;
     try {
       decompressed = zlib.gunzipSync(buffer).toString('utf-8');
@@ -1525,7 +2051,6 @@ app.get('/api/vessels', async (req, res) => {
     const json = JSON.parse(decompressed);
     const features = json.features || [];
 
-    // Map features to normalized VesselRecord (top 150 active moving vessels)
     const normalizedVessels: any[] = [];
     for (const feat of features) {
       if (!feat.geometry || !feat.properties) continue;
@@ -1536,7 +2061,6 @@ app.get('/api/vessels', async (req, res) => {
       const lat = coords[1];
       const props = feat.properties;
 
-      // Filter to vessels with valid coordinates
       if (typeof lon !== 'number' || typeof lat !== 'number') continue;
       if (lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
 
@@ -1567,14 +2091,39 @@ app.get('/api/vessels', async (req, res) => {
     }
 
     if (normalizedVessels.length === 0) {
-      return res.status(503).json({
-        success: false,
-        status: 'SOURCE UNAVAILABLE',
-        error: 'No active AIS transponder records parsed from live stream.'
+      recordObservation('vessels', {
+        status: 'LIVE',
+        latency_ms: elapsed,
+        item_count: 0,
+        last_attempt_at: new Date().toISOString(),
+        last_success_at: new Date().toISOString(),
+        last_updated: new Date().toISOString(),
+        cached: false,
+        stale: false,
+        error: null
+      });
+      return res.json({
+        success: true,
+        status: 'LIVE',
+        provider: 'Fintraffic / Digitraffic Live Marine AIS',
+        sourceUrl: endpoint,
+        count: 0,
+        data: []
       });
     }
 
     setCache(cacheKey, normalizedVessels, endpoint, 'Fintraffic / Digitraffic Live Marine AIS', 'LIVE');
+    recordObservation('vessels', {
+      status: 'LIVE',
+      latency_ms: elapsed,
+      item_count: normalizedVessels.length,
+      last_attempt_at: new Date().toISOString(),
+      last_success_at: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: null
+    });
 
     return res.json({
       success: true,
@@ -1587,9 +2136,21 @@ app.get('/api/vessels', async (req, res) => {
       data: normalizedVessels
     });
   } catch (err: any) {
+    const elapsed = Date.now() - startTime;
+    recordObservation('vessels', {
+      status: 'UNAVAILABLE',
+      latency_ms: elapsed,
+      item_count: 0,
+      last_attempt_at: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: `Live AIS stream connection failed: ${err.message}`
+    });
     return res.status(503).json({
       success: false,
-      status: 'SOURCE UNAVAILABLE',
+      status: 'UNAVAILABLE',
+      provider: 'Fintraffic / Digitraffic Live Marine AIS',
+      sourceUrl: endpoint,
       error: `Live AIS stream connection failed: ${err.message}. Strict Zero-Fake-Data forbids synthetic/static vessel fallback.`
     });
   }
@@ -1714,6 +2275,14 @@ app.get('/api/news', async (req, res) => {
   const cacheKey = 'gdelt_news_intel';
   const cached = getCached<any[]>(cacheKey, 60000); // 60s cache
   if (cached) {
+    recordObservation('gdelt', {
+      status: 'CACHED',
+      latency_ms: 0,
+      item_count: cached.data.length,
+      last_attempt_at: new Date().toISOString(),
+      cached: true,
+      stale: false
+    });
     return res.json({
       success: true,
       cached: true,
@@ -1727,6 +2296,7 @@ app.get('/api/news', async (req, res) => {
   }
 
   const endpoint = 'https://api.gdeltproject.org/api/v2/doc/doc?query=military%20OR%20diplomacy%20OR%20energy%20OR%20disaster%20OR%20treaty&mode=ArtList&maxrecords=25&format=json&sort=DateDesc';
+  const startTime = Date.now();
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
@@ -1736,6 +2306,8 @@ app.get('/api/news', async (req, res) => {
       headers: { 'User-Agent': 'GOD-VIEW-LAB-GeospatialPlatform/1.0' }
     });
     clearTimeout(timeout);
+
+    const elapsed = Date.now() - startTime;
 
     if (!response.ok) {
       throw new Error(`GDELT returned HTTP ${response.status}`);
@@ -1751,7 +2323,6 @@ app.get('/api/news', async (req, res) => {
     const articles = Array.isArray(json.articles) ? json.articles : [];
 
     const newsItems = articles.map((art: any, index: number) => {
-      // Determine category based on content
       const titleLower = (art.title || '').toLowerCase();
       let category: any = 'geopolitics';
       if (titleLower.includes('military') || titleLower.includes('missile') || titleLower.includes('troop') || titleLower.includes('defense') || titleLower.includes('navy')) category = 'military';
@@ -1773,12 +2344,23 @@ app.get('/api/news', async (req, res) => {
         sourceUrl: endpoint,
         adapter: 'server/gdelt_adapter',
         fetched_at: new Date().toISOString(),
-        status: 'VERIFIED LIVE',
+        status: 'LIVE',
         raw_identifier: art.url
       };
     });
 
-    setCache(cacheKey, newsItems, endpoint, 'GDELT Project 2.0', 'VERIFIED LIVE');
+    setCache(cacheKey, newsItems, endpoint, 'GDELT Project 2.0', 'LIVE');
+    recordObservation('gdelt', {
+      status: 'LIVE',
+      latency_ms: elapsed,
+      item_count: newsItems.length,
+      last_attempt_at: new Date().toISOString(),
+      last_success_at: new Date().toISOString(),
+      last_updated: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: null
+    });
 
     return res.json({
       success: true,
@@ -1786,19 +2368,29 @@ app.get('/api/news', async (req, res) => {
       fetched_at: new Date().toISOString(),
       provider: 'GDELT Project 2.0',
       sourceUrl: endpoint,
-      status: 'VERIFIED LIVE',
+      status: 'LIVE',
       count: newsItems.length,
       data: newsItems
     });
   } catch (err: any) {
+    const elapsed = Date.now() - startTime;
     console.warn('GDELT fetch notice:', err.message);
     const stale = getStale<any[]>(cacheKey);
     if (stale && stale.data && stale.data.length > 0) {
+      recordObservation('gdelt', {
+        status: 'STALE',
+        latency_ms: elapsed,
+        item_count: stale.data.length,
+        last_attempt_at: new Date().toISOString(),
+        cached: true,
+        stale: true,
+        error: `GDELT unreachable (${err.message}): serving stale cache`
+      });
       return res.json({
         success: true,
         cached: true,
         stale: true,
-        status: 'CACHED (UPSTREAM RECONNECTING)',
+        status: 'STALE',
         provider: 'GDELT Project 2.0',
         sourceUrl: endpoint,
         fetched_at: new Date(stale.timestamp).toISOString(),
@@ -1806,13 +2398,21 @@ app.get('/api/news', async (req, res) => {
         data: stale.data
       });
     }
-    return res.json({
-      success: true,
-      status: 'SOURCE UNAVAILABLE',
+    recordObservation('gdelt', {
+      status: 'UNAVAILABLE',
+      latency_ms: elapsed,
+      item_count: 0,
+      last_attempt_at: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: `GDELT news feed unreachable: ${err.message}`
+    });
+    return res.status(503).json({
+      success: false,
+      status: 'UNAVAILABLE',
       provider: 'GDELT Project 2.0',
       sourceUrl: endpoint,
       error: `GDELT news feed unreachable: ${err.message}`,
-      fetched_at: new Date().toISOString(),
       count: 0,
       data: []
     });
@@ -1824,6 +2424,14 @@ app.get('/api/macro', async (req, res) => {
   const cacheKey = 'global_macro_rates';
   const cached = getCached<any[]>(cacheKey, 60000);
   if (cached) {
+    recordObservation('macro', {
+      status: 'CACHED',
+      latency_ms: 0,
+      item_count: cached.data.length,
+      last_attempt_at: new Date().toISOString(),
+      cached: true,
+      stale: false
+    });
     return res.json({
       success: true,
       cached: true,
@@ -1837,9 +2445,10 @@ app.get('/api/macro', async (req, res) => {
   }
 
   const endpoint = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true';
+  const startTime = Date.now();
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     const response = await fetch(endpoint, {
       signal: controller.signal,
@@ -1847,122 +2456,161 @@ app.get('/api/macro', async (req, res) => {
     });
     clearTimeout(timeout);
 
-    let btcPrice = 64200;
-    let btcChange = 1.25;
-    let ethPrice = 3450;
-    let ethChange = -0.85;
+    const elapsed = Date.now() - startTime;
 
-    if (response.ok) {
-      const json = await response.json();
-      if (json.bitcoin) {
-        btcPrice = json.bitcoin.usd || btcPrice;
-        btcChange = json.bitcoin.usd_24h_change || btcChange;
-      }
-      if (json.ethereum) {
-        ethPrice = json.ethereum.usd || ethPrice;
-        ethChange = json.ethereum.usd_24h_change || ethChange;
-      }
+    if (!response.ok) {
+      throw new Error(`CoinGecko returned HTTP ${response.status}`);
     }
 
+    const json = await response.json();
+    if (!json.bitcoin || typeof json.bitcoin.usd !== 'number' || !json.ethereum || typeof json.ethereum.usd !== 'number') {
+      throw new Error('CoinGecko returned malformed or empty pricing payload');
+    }
+
+    const fetchTime = new Date().toISOString();
     const macroList = [
-      {
-        symbol: 'BRENT_CRUDE',
-        name: 'Brent Crude Oil Spot',
-        price: 74.82,
-        change_24h_pct: -0.42,
-        category: 'energy',
-        unit: 'USD/bbl',
-        updated_at: new Date().toISOString(),
-        provider: 'EIA / Intercontinental Exchange Benchmarks',
-        sourceUrl: 'https://www.eia.gov',
-        adapter: 'server/macro_adapter',
-        fetched_at: new Date().toISOString(),
-        status: 'VERIFIED LIVE',
-        raw_identifier: 'ICE-BRENT'
-      },
-      {
-        symbol: 'NATURAL_GAS',
-        name: 'Henry Hub Natural Gas',
-        price: 2.38,
-        change_24h_pct: 1.15,
-        category: 'energy',
-        unit: 'USD/MMBtu',
-        updated_at: new Date().toISOString(),
-        provider: 'NYMEX / CME Group',
-        sourceUrl: 'https://www.cmegroup.com',
-        adapter: 'server/macro_adapter',
-        fetched_at: new Date().toISOString(),
-        status: 'VERIFIED LIVE',
-        raw_identifier: 'NYMEX-NG'
-      },
-      {
-        symbol: 'GOLD_OZ',
-        name: 'Gold Spot Bullion',
-        price: 2685.40,
-        change_24h_pct: 0.65,
-        category: 'metals',
-        unit: 'USD/t.oz',
-        updated_at: new Date().toISOString(),
-        provider: 'LBMA London Gold Market',
-        sourceUrl: 'https://www.lbma.org.uk',
-        adapter: 'server/macro_adapter',
-        fetched_at: new Date().toISOString(),
-        status: 'VERIFIED LIVE',
-        raw_identifier: 'LBMA-XAU'
-      },
       {
         symbol: 'BTC_USD',
         name: 'Bitcoin Digital Reserve',
-        price: btcPrice,
-        change_24h_pct: Number(btcChange.toFixed(2)),
+        price: json.bitcoin.usd,
+        change_24h_pct: Number(Number(json.bitcoin.usd_24h_change || 0).toFixed(2)),
         category: 'crypto',
         unit: 'USD',
-        updated_at: new Date().toISOString(),
+        updated_at: fetchTime,
         provider: 'CoinGecko Global Feed',
         sourceUrl: endpoint,
         adapter: 'server/macro_adapter',
-        fetched_at: new Date().toISOString(),
-        status: 'VERIFIED LIVE',
+        fetched_at: fetchTime,
+        status: 'LIVE',
         raw_identifier: 'COINGECKO-BTC'
       },
       {
         symbol: 'ETH_USD',
         name: 'Ethereum Network',
-        price: ethPrice,
-        change_24h_pct: Number(ethChange.toFixed(2)),
+        price: json.ethereum.usd,
+        change_24h_pct: Number(Number(json.ethereum.usd_24h_change || 0).toFixed(2)),
         category: 'crypto',
         unit: 'USD',
-        updated_at: new Date().toISOString(),
+        updated_at: fetchTime,
         provider: 'CoinGecko Global Feed',
         sourceUrl: endpoint,
         adapter: 'server/macro_adapter',
-        fetched_at: new Date().toISOString(),
-        status: 'VERIFIED LIVE',
+        fetched_at: fetchTime,
+        status: 'LIVE',
         raw_identifier: 'COINGECKO-ETH'
+      },
+      {
+        symbol: 'BRENT_CRUDE',
+        name: 'Brent Crude Oil Spot',
+        price: null as any,
+        change_24h_pct: null as any,
+        category: 'energy',
+        unit: 'USD/bbl',
+        updated_at: null as any,
+        provider: 'EIA / Intercontinental Exchange Benchmarks',
+        sourceUrl: 'https://www.eia.gov',
+        adapter: 'server/macro_adapter',
+        fetched_at: fetchTime,
+        status: 'UNAVAILABLE',
+        error: 'No unauthenticated live commodity stream configured (zero-fake-data policy)'
+      },
+      {
+        symbol: 'NATURAL_GAS',
+        name: 'Henry Hub Natural Gas',
+        price: null as any,
+        change_24h_pct: null as any,
+        category: 'energy',
+        unit: 'USD/MMBtu',
+        updated_at: null as any,
+        provider: 'NYMEX / CME Group',
+        sourceUrl: 'https://www.cmegroup.com',
+        adapter: 'server/macro_adapter',
+        fetched_at: fetchTime,
+        status: 'UNAVAILABLE',
+        error: 'No unauthenticated live commodity stream configured (zero-fake-data policy)'
+      },
+      {
+        symbol: 'GOLD_OZ',
+        name: 'Gold Spot Bullion',
+        price: null as any,
+        change_24h_pct: null as any,
+        category: 'metals',
+        unit: 'USD/t.oz',
+        updated_at: null as any,
+        provider: 'LBMA London Gold Market',
+        sourceUrl: 'https://www.lbma.org.uk',
+        adapter: 'server/macro_adapter',
+        fetched_at: fetchTime,
+        status: 'UNAVAILABLE',
+        error: 'No unauthenticated live commodity stream configured (zero-fake-data policy)'
       }
     ];
 
-    setCache(cacheKey, macroList, endpoint, 'Global Macro Radar', 'VERIFIED LIVE');
+    setCache(cacheKey, macroList, endpoint, 'CoinGecko Global Feed', 'LIVE');
+    recordObservation('macro', {
+      status: 'LIVE',
+      latency_ms: elapsed,
+      item_count: macroList.length,
+      last_attempt_at: fetchTime,
+      last_success_at: fetchTime,
+      last_updated: fetchTime,
+      cached: false,
+      stale: false,
+      error: null
+    });
 
     return res.json({
       success: true,
       cached: false,
-      fetched_at: new Date().toISOString(),
-      provider: 'Global Macro Radar',
+      fetched_at: fetchTime,
+      provider: 'CoinGecko Global Feed',
       sourceUrl: endpoint,
-      status: 'VERIFIED LIVE',
+      status: 'LIVE',
       count: macroList.length,
       data: macroList
     });
   } catch (err: any) {
+    const elapsed = Date.now() - startTime;
     console.error('Macro fetch error:', err.message);
-    return res.status(502).json({
+    const stale = getStale<any[]>(cacheKey);
+    if (stale && stale.data && stale.data.length > 0) {
+      recordObservation('macro', {
+        status: 'STALE',
+        latency_ms: elapsed,
+        item_count: stale.data.length,
+        last_attempt_at: new Date().toISOString(),
+        cached: true,
+        stale: true,
+        error: `Macro stream unreachable (${err.message}): serving stale cache`
+      });
+      return res.json({
+        success: true,
+        cached: true,
+        stale: true,
+        status: 'STALE',
+        provider: 'CoinGecko Global Feed',
+        sourceUrl: endpoint,
+        fetched_at: new Date(stale.timestamp).toISOString(),
+        count: stale.data.length,
+        data: stale.data
+      });
+    }
+    recordObservation('macro', {
+      status: 'UNAVAILABLE',
+      latency_ms: elapsed,
+      item_count: 0,
+      last_attempt_at: new Date().toISOString(),
+      cached: false,
+      stale: false,
+      error: `Macro stream unreachable: ${err.message}`
+    });
+    return res.status(503).json({
       success: false,
-      status: 'SOURCE UNAVAILABLE',
-      provider: 'Global Macro Radar',
+      status: 'UNAVAILABLE',
+      provider: 'CoinGecko Global Feed',
       sourceUrl: endpoint,
       error: `Macro stream unreachable: ${err.message}`,
-      fetched_at: new Date().toISOString(),
+      count: 0,
       data: []
     });
   }
@@ -1970,181 +2618,22 @@ app.get('/api/macro', async (req, res) => {
 
 // Comprehensive Source Health Monitor
 app.get('/api/sources/health', (req, res) => {
-  const sourcesHealth = [
-    {
-      id: 'opensky',
-      name: 'ADS-B Live Flights',
-      provider: 'OpenSky Network',
-      endpoint: 'https://opensky-network.org/api/states/all',
-      status: cache['opensky_flights'] ? (cache['opensky_flights'].status as any) : 'VERIFIED LIVE',
-      latency_ms: 380,
-      item_count: cache['opensky_flights'] ? cache['opensky_flights'].data.length : 0,
-      last_updated: cache['opensky_flights'] ? new Date(cache['opensky_flights'].timestamp).toISOString() : 'Pending Request',
-      cached: Boolean(cache['opensky_flights']),
-      cache_ttl_seconds: 15,
-      auth_mode: 'public',
-      rate_limits: '10s refresh / 400 requests/day per unauthenticated IP'
-    },
-    {
-      id: 'celestrak',
-      name: 'NORAD Satellite TLEs',
-      provider: 'CelesTrak (NORAD GP)',
-      endpoint: 'https://celestrak.org/NORAD/elements/gp.php',
-      status: cache['celestrak_stations'] ? (cache['celestrak_stations'].status as any) : 'VERIFIED LIVE',
-      latency_ms: 290,
-      item_count: cache['celestrak_stations'] ? cache['celestrak_stations'].data.length : 0,
-      last_updated: cache['celestrak_stations'] ? new Date(cache['celestrak_stations'].timestamp).toISOString() : 'Pending Request',
-      cached: Boolean(cache['celestrak_stations']),
-      cache_ttl_seconds: 60,
-      auth_mode: 'public',
-      rate_limits: 'Standard web rate limits (60s cache enforced)'
-    },
-    {
-      id: 'usgs',
-      name: 'Global Seismic Feed',
-      provider: 'USGS Earthquake Hazards Program',
-      endpoint: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson',
-      status: cache['usgs_earthquakes'] ? (cache['usgs_earthquakes'].status as any) : 'VERIFIED LIVE',
-      latency_ms: 180,
-      item_count: cache['usgs_earthquakes'] ? cache['usgs_earthquakes'].data.length : 0,
-      last_updated: cache['usgs_earthquakes'] ? new Date(cache['usgs_earthquakes'].timestamp).toISOString() : 'Pending Request',
-      cached: Boolean(cache['usgs_earthquakes']),
-      cache_ttl_seconds: 30,
-      auth_mode: 'public',
-      rate_limits: 'Open public GeoJSON stream'
-    },
-    {
-      id: 'nasa_eonet',
-      name: 'Natural Hazards & Thermal Anomalies',
-      provider: 'NASA Earth Observatory (EONET v3)',
-      endpoint: 'https://eonet.gsfc.nasa.gov/api/v3/events',
-      status: cache['nasa_eonet_hazards'] ? (cache['nasa_eonet_hazards'].status as any) : 'VERIFIED LIVE',
-      latency_ms: 410,
-      item_count: cache['nasa_eonet_hazards'] ? cache['nasa_eonet_hazards'].data.length : 0,
-      last_updated: cache['nasa_eonet_hazards'] ? new Date(cache['nasa_eonet_hazards'].timestamp).toISOString() : 'Pending Request',
-      cached: Boolean(cache['nasa_eonet_hazards']),
-      cache_ttl_seconds: 60,
-      auth_mode: 'public',
-      rate_limits: 'Unauthenticated Public (60s cache enforced)'
-    },
-    {
-      id: 'rainviewer',
-      name: 'Global Weather Radar & Clouds',
-      provider: 'RainViewer Radar API',
-      endpoint: 'https://api.rainviewer.com/public/weather-maps.json',
-      status: cache['rainviewer_radar'] ? (cache['rainviewer_radar'].status as any) : 'VERIFIED LIVE',
-      latency_ms: 220,
-      item_count: cache['rainviewer_radar'] && cache['rainviewer_radar'].data ? cache['rainviewer_radar'].data.radar.past.length : 0,
-      last_updated: cache['rainviewer_radar'] ? new Date(cache['rainviewer_radar'].timestamp).toISOString() : 'Pending Request',
-      cached: Boolean(cache['rainviewer_radar']),
-      cache_ttl_seconds: 60,
-      auth_mode: 'public',
-      rate_limits: '10,000 requests/day'
-    },
-    {
-      id: 'infrastructure',
-      name: 'Critical Infrastructure & Power Matrix (EIA-860)',
-      provider: 'EIA-860 / Global Energy Monitor / IAEA PRIS / TeleGeography',
-      endpoint: '/api/infrastructure',
-      status: 'STATIC DATA',
-      latency_ms: 5,
-      item_count: FULL_INFRASTRUCTURE.length,
-      last_updated: new Date().toISOString(),
-      cached: true,
-      cache_ttl_seconds: 86400,
-      auth_mode: 'none',
-      rate_limits: 'Static Reference Baseline'
-    },
-    {
-      id: 'cameras',
-      name: 'Public Traffic & Port Webcams',
-      provider: 'Government Transport Agencies (Caltrans, NYSDOT, TfL, TfNSW, ACP, MLIT)',
-      endpoint: '/api/cameras',
-      status: 'VERIFIED LIVE',
-      latency_ms: 120,
-      item_count: PUBLIC_CAMERAS_DATA.length,
-      last_updated: new Date().toISOString(),
-      cached: true,
-      cache_ttl_seconds: 30,
-      auth_mode: 'public',
-      rate_limits: 'Per-agency public CCTV image refresh (15-60s)'
-    },
-    {
-      id: 'vessels',
-      name: 'Marine AIS Vessel Stream',
-      provider: 'Danish Maritime Authority / Coastal Terrestrial AIS',
-      endpoint: '/api/vessels',
-      status: 'VERIFIED LIVE',
-      latency_ms: 240,
-      item_count: MARINE_VESSELS_DATA.length,
-      last_updated: new Date().toISOString(),
-      cached: true,
-      cache_ttl_seconds: 60,
-      auth_mode: 'public',
-      rate_limits: 'Coastal AIS aggregator limits'
-    },
-    {
-      id: 'companies',
-      name: 'Company God View & Physical Asset Registry',
-      provider: 'SEC EDGAR / NSE / CERC / Statutory Filings',
-      endpoint: '/api/companies',
-      status: 'VERIFIED LIVE',
-      latency_ms: 10,
-      item_count: COMPANIES_DATA.length,
-      last_updated: new Date().toISOString(),
-      cached: true,
-      cache_ttl_seconds: 3600,
-      auth_mode: 'public',
-      rate_limits: 'Verified Corporate Asset Registry'
-    },
-    {
-      id: 'gdelt',
-      name: 'Geopolitical News Intelligence',
-      provider: 'GDELT Project 2.0 Global Event Database',
-      endpoint: 'https://api.gdeltproject.org/api/v2/doc/doc',
-      status: cache['gdelt_news_intel'] ? (cache['gdelt_news_intel'].status as any) : 'VERIFIED LIVE',
-      latency_ms: 520,
-      item_count: cache['gdelt_news_intel'] ? cache['gdelt_news_intel'].data.length : 0,
-      last_updated: cache['gdelt_news_intel'] ? new Date(cache['gdelt_news_intel'].timestamp).toISOString() : 'Pending Request',
-      cached: Boolean(cache['gdelt_news_intel']),
-      cache_ttl_seconds: 45,
-      auth_mode: 'public',
-      rate_limits: '1 request per 5 seconds'
-    },
-    {
-      id: 'macro',
-      name: 'Macro Commodities & Crypto Benchmarks',
-      provider: 'CoinGecko / EIA / LBMA Public Feeds',
-      endpoint: 'https://api.coingecko.com',
-      status: cache['global_macro_rates'] ? (cache['global_macro_rates'].status as any) : 'VERIFIED LIVE',
-      latency_ms: 190,
-      item_count: cache['global_macro_rates'] ? cache['global_macro_rates'].data.length : 5,
-      last_updated: cache['global_macro_rates'] ? new Date(cache['global_macro_rates'].timestamp).toISOString() : 'Pending Request',
-      cached: Boolean(cache['global_macro_rates']),
-      cache_ttl_seconds: 60,
-      auth_mode: 'public',
-      rate_limits: '30 calls/minute'
-    },
-    {
-      id: 'noaa_swpc',
-      name: 'NOAA Space Weather Prediction Center',
-      provider: 'NOAA SWPC (Planetary K-Index & Geomagnetic Storms)',
-      endpoint: 'https://services.swpc.noaa.gov/json/planetary_k_index_1m.json',
-      status: 'VERIFIED LIVE',
-      latency_ms: 180,
-      item_count: 1,
-      last_updated: new Date().toISOString(),
-      cached: Boolean(cache['noaa_swpc_planetary_k']),
-      cache_ttl_seconds: 60,
-      auth_mode: 'public',
-      rate_limits: 'Open 1-minute public refresh window'
-    }
-  ];
+  const sourcesHealth = Object.values(sourceObservations).map(obs => {
+    const freshness_seconds = obs.last_success_at
+      ? Math.max(0, Math.round((Date.now() - new Date(obs.last_success_at).getTime()) / 1000))
+      : null;
+    return {
+      ...obs,
+      freshness_seconds,
+      freshnessSeconds: freshness_seconds
+    };
+  });
 
   return res.json({
     success: true,
     timestamp: new Date().toISOString(),
-    sources: sourcesHealth
+    sources: sourcesHealth,
+    data: sourcesHealth
   });
 });
 

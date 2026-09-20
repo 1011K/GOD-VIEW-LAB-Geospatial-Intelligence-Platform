@@ -269,11 +269,12 @@ export interface NewsIntelligenceRecord extends DataProvenance {
 export interface MacroIndicatorRecord extends DataProvenance {
   symbol: string;
   name: string;
-  price: number;
-  change_24h_pct: number;
+  price: number | null;
+  change_24h_pct: number | null;
   category: 'energy' | 'metals' | 'forex' | 'crypto';
   unit: string;
   updated_at: string;
+  source_error?: string;
 }
 
 export interface SourceHealthEntry {

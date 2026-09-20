@@ -134,7 +134,7 @@ describe('ASTRA God View & Argos Atlas End-to-End Verification Suite', () => {
       assert.strictEqual(res.status, 200);
       const json = (await res.json()) as any;
       assert.strictEqual(json.success, true);
-      assert.ok(json.status === 'LIVE' || json.status === 'UNAVAILABLE');
+      assert.ok(json.status === 'LIVE' || json.status === 'REACHABLE' || json.status === 'UNAVAILABLE');
       assert.ok(typeof json.checked_at === 'string');
       assert.ok(Date.now() - new Date(json.checked_at).getTime() < 15000, 'Probe timestamp must be fresh (<15s)');
     });
@@ -268,6 +268,79 @@ describe('ASTRA God View & Argos Atlas End-to-End Verification Suite', () => {
       if (res.status === 200) {
         assert.strictEqual(json.success, true);
         assert.ok(json.provider.includes('RainViewer'));
+      }
+    });
+  });
+
+  // 6. Standardized Endpoint Contracts & Observation Store Verification
+  describe('6. Standardized Endpoint Contracts & Observation Store', () => {
+    test('GET /api/sources/health returns empirical observation store with valid statuses', async () => {
+      const res = await fetch(`${baseUrl}/api/sources/health`);
+      assert.strictEqual(res.status, 200);
+      const json = (await res.json()) as any;
+
+      assert.strictEqual(json.success, true);
+      assert.ok(Array.isArray(json.sources));
+      assert.ok(json.sources.length >= 8);
+
+      const validStatuses = ['LIVE', 'CACHED', 'STALE', 'STATIC_REFERENCE', 'NOT_CHECKED', 'UNAVAILABLE', 'NOT_CONFIGURED'];
+      for (const s of json.sources) {
+        assert.ok(
+          validStatuses.includes(s.status),
+          `Source ${s.id} status '${s.status}' must be one of ${validStatuses.join(', ')}`
+        );
+        // If untouched / NOT_CHECKED, latency must be null (never fake hardcoded)
+        if (s.status === 'NOT_CHECKED') {
+          assert.strictEqual(s.latency_ms, null);
+        }
+      }
+    });
+
+    test('GET /api/macro never returns fake hardcoded numbers (74.82, 2.38, 2685.40)', async () => {
+      const res = await fetch(`${baseUrl}/api/macro`);
+      assert.strictEqual(res.status, 200);
+      const json = (await res.json()) as any;
+
+      assert.strictEqual(json.success, true);
+      assert.ok(Array.isArray(json.data));
+
+      const brent = json.data.find((m: any) => m.symbol === 'BRENT');
+      const gas = json.data.find((m: any) => m.symbol === 'NG_HENRY');
+      const gold = json.data.find((m: any) => m.symbol === 'GOLD_XAU');
+
+      // Unconfigured macro feeds must return UNAVAILABLE with null price, never hardcoded fake values
+      if (brent) {
+        assert.notStrictEqual(brent.price, 74.82, 'Must not return fake Brent 74.82');
+        if (brent.status === 'UNAVAILABLE') {
+          assert.strictEqual(brent.price, null);
+        }
+      }
+      if (gas) {
+        assert.notStrictEqual(gas.price, 2.38, 'Must not return fake Henry Hub 2.38');
+        if (gas.status === 'UNAVAILABLE') {
+          assert.strictEqual(gas.price, null);
+        }
+      }
+      if (gold) {
+        assert.notStrictEqual(gold.price, 2685.40, 'Must not return fake Gold 2685.40');
+        if (gold.status === 'UNAVAILABLE') {
+          assert.strictEqual(gold.price, null);
+        }
+      }
+    });
+
+    test('Endpoint contract: Upstream failure never returns HTTP 200 with success:true and empty data array', async () => {
+      // Satellites with non-existent group
+      const res = await fetch(`${baseUrl}/api/satellites?group=nonexistent_invalid_group_xyz`);
+      // It must either be 200 with real data, or 503 fail-closed (never 200 success:true data:[])
+      if (res.status === 200) {
+        const json = (await res.json()) as any;
+        assert.ok(json.data && json.data.length > 0);
+      } else {
+        assert.strictEqual(res.status, 503);
+        const json = (await res.json()) as any;
+        assert.strictEqual(json.success, false);
+        assert.strictEqual(json.status, 'UNAVAILABLE');
       }
     });
   });

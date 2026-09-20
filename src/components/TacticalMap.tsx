@@ -255,8 +255,8 @@ export function TacticalMap({
         provider: 'Submarine Cable Map Registry',
         sourceUrl: 'https://www.submarinecablemap.com',
         adapter: 'SubmarineFiberRegistry',
-        fetched_at: new Date().toISOString(),
-        status: 'VERIFIED LIVE'
+        fetched_at: '2024-01-01T00:00:00.000Z',
+        status: 'STATIC_REFERENCE'
       }));
 
       bitPathsLayerGroup.current.addLayer(coreLine);

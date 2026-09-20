@@ -192,7 +192,7 @@ export function LayerControlPanel({
 
   const getSourceStatus = (id: string) => {
     const s = sourcesHealth.find(item => item.id === id);
-    return s?.status || 'VERIFIED LIVE';
+    return s?.status || 'NOT_CHECKED';
   };
 
   if (!isOpen) return null;
@@ -355,8 +355,12 @@ export function LayerControlPanel({
               <div>
                 <div className="font-semibold flex items-center gap-1.5">
                   Satellites (SGP4)
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    VERIFIED LIVE
+                  <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                    getSourceStatus('celestrak') === 'LIVE' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
+                    getSourceStatus('celestrak') === 'UNAVAILABLE' ? 'bg-rose-950 text-rose-400 border border-rose-800' :
+                    'bg-slate-800 text-slate-400 border border-slate-700'
+                  }`}>
+                    {getSourceStatus('celestrak')}
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-400">CelesTrak real-time TLE orbits</div>
@@ -403,8 +407,12 @@ export function LayerControlPanel({
               <div>
                 <div className="font-semibold flex items-center gap-1.5">
                   Earthquakes & Seismic
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    VERIFIED LIVE
+                  <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                    getSourceStatus('usgs') === 'LIVE' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
+                    getSourceStatus('usgs') === 'UNAVAILABLE' ? 'bg-rose-950 text-rose-400 border border-rose-800' :
+                    'bg-slate-800 text-slate-400 border border-slate-700'
+                  }`}>
+                    {getSourceStatus('usgs')}
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-400">USGS 24h Real-time feed</div>
@@ -453,8 +461,12 @@ export function LayerControlPanel({
               <div>
                 <div className="font-semibold flex items-center gap-1.5">
                   Wildfires & Hazards
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    VERIFIED LIVE
+                  <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                    getSourceStatus('nasa-eonet') === 'LIVE' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
+                    getSourceStatus('nasa-eonet') === 'UNAVAILABLE' ? 'bg-rose-950 text-rose-400 border border-rose-800' :
+                    'bg-slate-800 text-slate-400 border border-slate-700'
+                  }`}>
+                    {getSourceStatus('nasa-eonet')}
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-400">NASA EONET & MODIS/VIIRS</div>
@@ -484,8 +496,12 @@ export function LayerControlPanel({
               <div>
                 <div className="font-semibold flex items-center gap-1.5">
                   Global Weather Radar
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    VERIFIED LIVE
+                  <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                    getSourceStatus('rainviewer') === 'LIVE' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
+                    getSourceStatus('rainviewer') === 'UNAVAILABLE' ? 'bg-rose-950 text-rose-400 border border-rose-800' :
+                    'bg-slate-800 text-slate-400 border border-slate-700'
+                  }`}>
+                    {getSourceStatus('rainviewer')}
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-400">RainViewer Doppler radar composite</div>
@@ -637,8 +653,12 @@ export function LayerControlPanel({
               <div>
                 <div className="font-semibold flex items-center gap-1.5">
                   OSINT & Geopolitical News
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    VERIFIED LIVE
+                  <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                    getSourceStatus('gdelt') === 'LIVE' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
+                    getSourceStatus('gdelt') === 'UNAVAILABLE' ? 'bg-rose-950 text-rose-400 border border-rose-800' :
+                    'bg-slate-800 text-slate-400 border border-slate-700'
+                  }`}>
+                    {getSourceStatus('gdelt')}
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-400">GDELT Project 2.0 Real-time feed</div>

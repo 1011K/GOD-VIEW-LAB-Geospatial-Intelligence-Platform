@@ -198,7 +198,7 @@ export function IntelFeedPanel({
               <div className="space-y-2 p-1">
                 <div className="text-[10px] text-slate-400 mb-1 flex items-center justify-between">
                   <span>GLOBAL COMMODITIES & BENCHMARKS</span>
-                  <span className="text-emerald-400 font-bold">VERIFIED LIVE</span>
+                  <span className="text-cyan-400 font-bold">MARKET FEED</span>
                 </div>
                 {macro.map((m, idx) => (
                   <div key={idx} className="p-2 rounded bg-slate-900/60 border border-slate-800 flex items-center justify-between">
@@ -210,12 +210,23 @@ export function IntelFeedPanel({
                       <div className="text-[10px] text-slate-400">{m.provider}</div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-slate-100">
-                        {m.price.toLocaleString()} <span className="text-[9px] text-slate-400">{m.unit}</span>
-                      </div>
-                      <div className={`text-[10px] font-bold ${m.change_24h_pct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {m.change_24h_pct >= 0 ? '+' : ''}{m.change_24h_pct}% (24h)
-                      </div>
+                      {m.status === 'UNAVAILABLE' || m.price == null ? (
+                        <div>
+                          <div className="font-bold text-rose-400 text-xs">UNAVAILABLE</div>
+                          <div className="text-[8px] text-slate-500 max-w-[120px] truncate">{m.source_error || 'No feed configured'}</div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="font-bold text-slate-100">
+                            {m.price.toLocaleString()} <span className="text-[9px] text-slate-400">{m.unit}</span>
+                          </div>
+                          {m.change_24h_pct != null && (
+                            <div className={`text-[10px] font-bold ${m.change_24h_pct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {m.change_24h_pct >= 0 ? '+' : ''}{m.change_24h_pct}% (24h)
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

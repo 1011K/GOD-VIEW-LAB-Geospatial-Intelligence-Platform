@@ -166,7 +166,14 @@ export function SatellitePassPredictor({
           </span>
         </h3>
 
-        {passes.length === 0 ? (
+        {satellites.length === 0 ? (
+          <div className="py-12 text-center text-rose-400 font-bold border border-rose-500/30 rounded-lg bg-rose-950/20 p-6 space-y-2">
+            <div>DATA UNAVAILABLE</div>
+            <div className="text-xs font-normal text-slate-400">
+              No active orbital ephemeris loaded. Upstream CelesTrak service may be unreachable or returned no TLE data.
+            </div>
+          </div>
+        ) : passes.length === 0 ? (
           <div className="py-12 text-center text-slate-500">
             No line-of-sight visual passes above 10° elevation detected in the next 36 hours for this ground station.
           </div>
