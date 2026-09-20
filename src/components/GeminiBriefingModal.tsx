@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Cpu, 
@@ -11,6 +11,8 @@ import {
   FileCheck,
   Zap
 } from 'lucide-react';
+import { fetchAiCapabilities } from '../services/providers';
+import { AiCapabilities } from '../types';
 
 interface GeminiBriefingModalProps {
   isOpen: boolean;
@@ -40,10 +42,22 @@ export function GeminiBriefingModal({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [generatedAt, setGeneratedAt] = useState<string>('');
+  const [capabilities, setCapabilities] = useState<AiCapabilities | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchAiCapabilities().then(setCapabilities);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const generateBriefing = async () => {
+    if (capabilities && !capabilities.available) {
+      setError('AI ANALYSIS OPTIONAL / NOT CONFIGURED');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -68,7 +82,7 @@ export function GeminiBriefingModal({
       setBriefing(data.briefing);
       setGeneratedAt(new Date(data.generated_at).toLocaleTimeString());
     } catch (err: any) {
-      setError(err.message || 'Error communicating with Gemini intelligence engine.');
+      setError(err.message || 'AI analysis engine is currently unavailable.');
     } finally {
       setLoading(false);
     }
@@ -91,9 +105,9 @@ export function GeminiBriefingModal({
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-100 font-['Chakra_Petch'] tracking-wide flex items-center gap-2">
-                GEMINI GEOINTELLIGENCE SITUATION BRIEFING
-                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/30">
-                  GEMINI 2.5 FLASH
+                GEOINTELLIGENCE SITUATION BRIEFING
+                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/30 uppercase">
+                  {capabilities?.available ? (capabilities.model || 'AI SYNTHESIS') : 'AI OPTIONAL'}
                 </span>
               </h2>
               <p className="text-[11px] text-slate-400">
@@ -122,7 +136,8 @@ export function GeminiBriefingModal({
 
           <button
             onClick={generateBriefing}
-            disabled={loading}
+            disabled={loading || (capabilities !== null && !capabilities.available)}
+            title={capabilities && !capabilities.available ? 'AI Analysis Optional / Not Configured' : undefined}
             className="flex items-center space-x-2 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-slate-950 font-bold text-xs transition-all disabled:opacity-50 shadow-md shadow-cyan-950"
           >
             <Sparkles className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -132,20 +147,29 @@ export function GeminiBriefingModal({
 
         {/* Content Area */}
         <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+          {capabilities && !capabilities.available && (
+            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-300 space-y-2">
+              <div className="flex items-center space-x-2 text-cyan-400 font-bold">
+                <Cpu className="w-4 h-4" />
+                <span>AI ANALYSIS OPTIONAL / NOT CONFIGURED</span>
+              </div>
+              <p className="text-xs text-slate-400">
+                The core platform operates 100% keyless with full 2D/3D maps, real-time SGP4 orbital mechanics, ADS-B flights, seismic monitoring, and public surveillance feeds. Server-side AI situational synthesis is an optional feature.
+              </p>
+            </div>
+          )}
+
           {error && (
             <div className="p-4 rounded-xl bg-rose-950/30 border border-rose-500/40 text-rose-300 flex items-start space-x-2.5">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-400" />
               <div>
-                <strong className="block font-bold">Briefing Generation Unavailable:</strong>
+                <strong className="block font-bold">Briefing Notice:</strong>
                 <p className="text-xs text-rose-200/90 mt-0.5">{error}</p>
-                <p className="text-[10px] text-slate-400 mt-2">
-                  Verify that <code>GEMINI_API_KEY</code> is configured in the AI Studio environment secrets.
-                </p>
               </div>
             </div>
           )}
 
-          {!briefing && !loading && !error && (
+          {!briefing && !loading && !error && (!capabilities || capabilities.available) && (
             <div className="py-12 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-cyan-950/60 border border-cyan-500/30 flex items-center justify-center mx-auto text-cyan-400">
                 <FileCheck className="w-6 h-6" />
@@ -154,7 +178,16 @@ export function GeminiBriefingModal({
                 No Active Situation Briefing Generated Yet
               </h3>
               <p className="text-xs text-slate-400 max-w-md mx-auto">
-                Click "Generate Briefing" to run a server-side Gemini 2.5 Flash analytical synthesis over the live aircraft positions, orbital tracks, seismic tremors, and global events.
+                Click "Generate Briefing" to run an automated analytical synthesis over live aircraft positions, orbital tracks, seismic tremors, and global events.
+              </p>
+            </div>
+          )}
+
+          {loading && (
+            <div className="py-16 text-center space-y-4">
+              <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin mx-auto" />
+              <p className="text-xs text-cyan-300 animate-pulse">
+                Synthesizing global geospatial telemetry through {capabilities?.model || 'AI engine'}...
               </p>
             </div>
           )}

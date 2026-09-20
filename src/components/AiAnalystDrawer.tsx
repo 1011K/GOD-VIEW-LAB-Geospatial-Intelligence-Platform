@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bot, 
   Send, 
@@ -9,7 +9,8 @@ import {
   Terminal,
   Activity,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Cpu
 } from 'lucide-react';
 import { 
   AircraftRecord, 
@@ -17,8 +18,10 @@ import {
   EarthquakeRecord, 
   WildfireRecord, 
   NewsIntelligenceRecord, 
-  MacroIndicatorRecord 
+  MacroIndicatorRecord,
+  AiCapabilities
 } from '../types';
+import { fetchAiCapabilities } from '../services/providers';
 
 interface AiAnalystDrawerProps {
   isOpen: boolean;
@@ -56,16 +59,27 @@ export function AiAnalystDrawer({
   news,
   macro
 }: AiAnalystDrawerProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'init-1',
-      sender: 'gemini',
-      text: `Tactical Geospatial Intelligence Engine online. Powered by Gemini 3.8 Flash.\nCurrently synthesizing ${flights.length} live ADS-B flights, ${satellites.length} Keplerian orbital assets, ${earthquakes.length} seismic tremors, and ${wildfires.length} thermal anomalies.\n\nHow can I assist your geospatial analysis?`,
-      timestamp: new Date().toLocaleTimeString()
-    }
-  ]);
+  const [capabilities, setCapabilities] = useState<AiCapabilities | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputQuery, setInputQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchAiCapabilities().then(caps => {
+        setCapabilities(caps);
+        const modelLabel = caps.available ? caps.model : 'Analytical Core';
+        setMessages([
+          {
+            id: 'init-1',
+            sender: 'gemini',
+            text: `Tactical Geospatial Intelligence Engine online (${modelLabel}).\nCurrently synthesizing ${flights.length} live ADS-B flights, ${satellites.length} SGP4 orbital assets, ${earthquakes.length} seismic tremors, and ${wildfires.length} thermal anomalies.\n\n${caps.available ? 'How can I assist your geospatial analysis?' : 'AI natural language analysis is currently optional / not configured. Core maps and data feeds remain 100% active.'}`,
+            timestamp: new Date().toLocaleTimeString()
+          }
+        ]);
+      });
+    }
+  }, [isOpen, flights.length, satellites.length, earthquakes.length, wildfires.length]);
 
   if (!isOpen) return null;
 
@@ -144,7 +158,9 @@ export function AiAnalystDrawer({
           <div>
             <h3 className="font-bold text-slate-100 font-['Chakra_Petch'] text-sm flex items-center gap-1.5">
               <span>GEOINTEL AI ANALYST</span>
-              <span className="px-1.5 py-0.2 rounded bg-cyan-950 border border-cyan-800 text-cyan-400 text-[9px]">GEMINI 3.8 FLASH</span>
+              <span className="px-1.5 py-0.2 rounded bg-cyan-950 border border-cyan-800 text-cyan-400 text-[9px] uppercase">
+                {capabilities?.available ? (capabilities.model || 'AI') : 'AI OPTIONAL'}
+              </span>
             </h3>
             <p className="text-[10px] text-slate-400">
               Live multi-layer geospatial correlation & strategic assessment
@@ -170,9 +186,9 @@ export function AiAnalystDrawer({
           {PRESET_QUERIES.map((preset, idx) => (
             <button
               key={idx}
-              disabled={isLoading}
+              disabled={isLoading || (capabilities !== null && !capabilities.available)}
               onClick={() => handleSend(preset)}
-              className="w-full text-left p-1.5 rounded bg-slate-950/70 border border-slate-800 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 text-[10px] truncate transition-colors"
+              className="w-full text-left p-1.5 rounded bg-slate-950/70 border border-slate-800 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 text-[10px] truncate transition-colors disabled:opacity-40"
             >
               • {preset}
             </button>
@@ -182,13 +198,25 @@ export function AiAnalystDrawer({
 
       {/* Message Chat History */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+        {capabilities && !capabilities.available && (
+          <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800 text-slate-400 text-[11px] space-y-1">
+            <div className="flex items-center space-x-1.5 text-cyan-400 font-bold">
+              <Cpu className="w-3.5 h-3.5" />
+              <span>AI ANALYSIS OPTIONAL / NOT CONFIGURED</span>
+            </div>
+            <p className="text-[10px] leading-relaxed">
+              Core multi-domain geospatial maps, orbital mechanics, ADS-B telemetry, and sensors operate fully keyless. Real-time Gemini LLM correlation is an optional server extension.
+            </p>
+          </div>
+        )}
+
         {messages.map(msg => (
           <div
             key={msg.id}
             className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
           >
             <div className="flex items-center space-x-1 text-[9px] text-slate-500 mb-0.5">
-              <span>{msg.sender === 'user' ? 'OPERATOR' : 'GEMINI ANALYST'}</span>
+              <span>{msg.sender === 'user' ? 'OPERATOR' : 'TACTICAL ANALYST'}</span>
               <span>•</span>
               <span>{msg.timestamp}</span>
             </div>
@@ -208,7 +236,7 @@ export function AiAnalystDrawer({
         {isLoading && (
           <div className="flex items-center space-x-2 text-cyan-400 p-2 bg-slate-900/40 rounded-lg border border-slate-800 animate-pulse">
             <Sparkles className="w-4 h-4 animate-spin" />
-            <span className="text-[11px]">Gemini 3.8 Flash synthesizing multi-layer geointel data...</span>
+            <span className="text-[11px]">Synthesizing multi-layer geointel data...</span>
           </div>
         )}
       </div>
@@ -220,13 +248,13 @@ export function AiAnalystDrawer({
           value={inputQuery}
           onChange={(e) => setInputQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Ask tactical analyst anything about current telemetry..."
-          disabled={isLoading}
-          className="flex-1 p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 placeholder-slate-600 outline-none focus:border-cyan-500 text-xs font-mono"
+          placeholder={capabilities && !capabilities.available ? "AI analysis is optional and not currently active..." : "Ask tactical analyst anything about current telemetry..."}
+          disabled={isLoading || (capabilities !== null && !capabilities.available)}
+          className="flex-1 p-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 placeholder-slate-600 outline-none focus:border-cyan-500 text-xs font-mono disabled:opacity-40"
         />
         <button
           onClick={() => handleSend()}
-          disabled={isLoading || !inputQuery.trim()}
+          disabled={isLoading || !inputQuery.trim() || (capabilities !== null && !capabilities.available)}
           className="p-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-slate-950 font-bold transition-colors"
         >
           <Send className="w-4 h-4" />

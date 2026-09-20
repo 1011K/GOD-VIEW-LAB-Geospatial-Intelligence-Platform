@@ -100,8 +100,8 @@ describe('ASTRA God View & Argos Atlas End-to-End Verification Suite', () => {
   });
 
   // 3. Camera Health Transitions & Provenance
-  describe('3. Public Cameras: Initial UNKNOWN State & Health Probe Promotion', () => {
-    test('GET /api/cameras returns catalog with all cameras initialized to UNKNOWN status', async () => {
+  describe('3. Public Cameras: Initial REGISTERED State & Health Probe Promotion', () => {
+    test('GET /api/cameras returns catalog with all cameras initialized to REGISTERED status', async () => {
       const res = await fetch(`${baseUrl}/api/cameras`);
       assert.strictEqual(res.status, 200);
       const json = (await res.json()) as any;
@@ -111,12 +111,12 @@ describe('ASTRA God View & Argos Atlas End-to-End Verification Suite', () => {
       assert.ok(Array.isArray(json.data));
       assert.ok(json.data.length > 0);
 
-      // Every camera in the initial static catalog must be UNKNOWN until probed
+      // Every camera in the initial static catalog must be REGISTERED until probed
       for (const camera of json.data) {
         assert.strictEqual(
           camera.status,
-          'UNKNOWN',
-          `Camera ${camera.id} must initialize to UNKNOWN, but was ${camera.status}`
+          'REGISTERED',
+          `Camera ${camera.id} must initialize to REGISTERED, but was ${camera.status}`
         );
       }
     });

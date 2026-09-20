@@ -128,6 +128,19 @@ export function Header({
         </button>
 
         <button
+          onClick={() => setViewMode('3d-globe')}
+          className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
+            viewMode === '3d-globe' 
+              ? 'bg-cyan-500/30 text-cyan-200 border border-cyan-400 font-bold shadow-sm ring-1 ring-cyan-500/50' 
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+          title="CesiumJS 3D Orbital God View Globe"
+        >
+          <Globe className="w-3.5 h-3.5 text-cyan-400" />
+          <span>3D God View</span>
+        </button>
+
+        <button
           onClick={() => setViewMode('analytics')}
           className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
             viewMode === 'analytics' 

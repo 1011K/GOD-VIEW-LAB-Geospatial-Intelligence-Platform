@@ -1,4 +1,18 @@
-export type SourceStatus = 'VERIFIED LIVE' | 'LIVE' | 'STALE' | 'OFFLINE' | 'UNAVAILABLE' | 'SOURCE UNAVAILABLE' | 'REQUIRES KEY' | 'BROKEN' | 'STATIC DATA' | 'STATIC_REFERENCE' | 'MOCK/DEMO' | 'UNKNOWN';
+export type SourceStatus = 
+  | 'LIVE' 
+  | 'CACHED' 
+  | 'STALE' 
+  | 'STATIC_REFERENCE' 
+  | 'UNAVAILABLE' 
+  | 'NOT_CONFIGURED' 
+  | 'NOT_CHECKED'
+  | 'VERIFIED LIVE'
+  | 'SOURCE UNAVAILABLE'
+  | 'STATIC DATA'
+  | 'REGISTERED'
+  | 'REACHABLE'
+  | 'OFFLINE'
+  | 'UNKNOWN';
 
 export interface DataProvenance {
   provider: string;
@@ -185,8 +199,37 @@ export interface CompanyProfile extends DataProvenance {
   technicals_link?: string;
 }
 
-export type CameraStatus = 'LIVE' | 'STALE' | 'OFFLINE' | 'UNAVAILABLE' | 'UNKNOWN';
+export type CameraStatus = 'REGISTERED' | 'REACHABLE' | 'LIVE' | 'STALE' | 'UNAVAILABLE' | 'UNKNOWN' | 'OFFLINE';
 export type PanelDockMode = 'docked-left' | 'docked-right' | 'side-map' | 'floating';
+
+export interface AiCapabilities {
+  available: boolean;
+  provider: string;
+  model: string;
+  status: 'OPERATIONAL' | 'NOT_CONFIGURED';
+  message: string;
+}
+
+export interface ReadinessCheckItem {
+  id: string;
+  name: string;
+  type: 'core' | 'optional';
+  status: 'PASS' | 'DEGRADED' | 'FAIL' | 'OPTIONAL_UNAVAILABLE';
+  latencyMs?: number | null;
+  error?: string | null;
+  message?: string;
+}
+
+export interface SystemReadiness {
+  overall: 'PASS' | 'DEGRADED' | 'FAIL';
+  corePassed: number;
+  coreTotal: number;
+  optionalUnavailable: number;
+  failed: number;
+  commit: string;
+  checkedAt: string;
+  checks: Record<string, ReadinessCheckItem>;
+}
 
 export interface PublicCameraRecord extends DataProvenance {
   id?: string;
@@ -310,7 +353,7 @@ export interface LayerToggleState {
   heatmapMode: 'thermal' | 'seismic' | 'aviation';
 }
 
-export type ViewMode = 'tactical-map' | 'analytics' | 'grid-matrix' | 'pass-predictor' | 'ai-analyst' | 'company-god-view' | 'surveillance-wall' | 'split-map';
+export type ViewMode = 'tactical-map' | '3d-globe' | 'analytics' | 'grid-matrix' | 'pass-predictor' | 'ai-analyst' | 'company-god-view' | 'surveillance-wall' | 'split-map';
 
 export type BaseMapType = 'dark' | 'satellite' | 'terrain' | 'osm';
 

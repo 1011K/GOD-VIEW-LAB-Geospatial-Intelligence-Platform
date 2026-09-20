@@ -5,7 +5,7 @@ import { PUBLIC_CAMERAS_DATA } from '../src/data/publicCamerasData';
 describe('GEOINT Panels, Side Map & Live Camera Verification Suite', () => {
 
   describe('1. Public Camera Catalog Provenance & Integrity', () => {
-    test('all registered public cameras have explicit id, camera_id, and UNKNOWN initial status', () => {
+    test('all registered public cameras have explicit id, camera_id, and REGISTERED initial status', () => {
       assert.ok(PUBLIC_CAMERAS_DATA.length >= 20, 'Expected at least 20 registered global cameras');
 
       for (const cam of PUBLIC_CAMERAS_DATA) {
@@ -14,8 +14,8 @@ describe('GEOINT Panels, Side Map & Live Camera Verification Suite', () => {
         assert.strictEqual(cam.id, cam.camera_id, `Camera id and camera_id must match: ${cam.id}`);
         assert.strictEqual(
           cam.status,
-          'UNKNOWN',
-          `Camera ${cam.id} must be UNKNOWN until live health check probe`
+          'REGISTERED',
+          `Camera ${cam.id} must be REGISTERED until live health check probe`
         );
         assert.ok(
           cam.latitude >= -90 && cam.latitude <= 90,

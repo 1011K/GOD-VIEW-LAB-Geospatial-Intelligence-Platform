@@ -3,6 +3,7 @@ import path from 'path';
 import zlib from 'zlib';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import { POWER_PLANTS_DATA } from './src/data/powerPlantsData';
 import { COMPANIES_DATA } from './src/data/companiesData';
@@ -13,6 +14,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 app.use(express.json());
 
@@ -2649,14 +2651,114 @@ app.get('/api/audit', (req, res) => {
   });
 });
 
+// Dynamic AI Provider Capability Detection (Keyless Safety)
+app.get('/api/ai/capabilities', (req, res) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const configured = Boolean(apiKey && apiKey.trim().length > 0);
+  return res.json({
+    available: configured,
+    provider: configured ? 'Google Gemini' : 'none',
+    model: configured ? DEFAULT_GEMINI_MODEL : 'none',
+    status: configured ? 'OPERATIONAL' : 'NOT_CONFIGURED',
+    message: configured ? 'AI ANALYSIS OPERATIONAL' : 'AI ANALYSIS OPTIONAL / NOT CONFIGURED'
+  });
+});
+
+// System Readiness Assessment Endpoint
+app.get('/api/system/readiness', (req, res) => {
+  const coreFeeds = [
+    { id: 'opensky', name: 'ADS-B Air Traffic' },
+    { id: 'celestrak', name: 'NORAD SGP4 Satellites' },
+    { id: 'usgs', name: 'USGS Seismic Activity' },
+    { id: 'nasa_eonet', name: 'NASA EONET Hazards' },
+    { id: 'rainviewer', name: 'Weather Doppler Radar' },
+    { id: 'noaa_swpc', name: 'NOAA Space Weather' },
+    { id: 'macro', name: 'Macro Commodity Indicators' },
+    { id: 'cameras', name: 'Municipal Surveillance Catalog' },
+    { id: 'infrastructure', name: 'Critical Energy Infrastructure' }
+  ];
+
+  const checks: Record<string, any> = {};
+  let corePassed = 0;
+  let failed = 0;
+
+  for (const feed of coreFeeds) {
+    const obs = sourceObservations[feed.id];
+    let status = 'PASS';
+    if (!obs || obs.status === 'NOT_CHECKED') {
+      status = 'DEGRADED';
+    } else if (obs.status === 'UNAVAILABLE') {
+      status = 'FAIL';
+      failed++;
+    } else {
+      corePassed++;
+    }
+    checks[feed.id] = {
+      id: feed.id,
+      name: feed.name,
+      type: 'core',
+      status,
+      observationStatus: obs?.status || 'NOT_CHECKED',
+      latencyMs: obs?.latency_ms ?? null,
+      error: obs?.error ?? null
+    };
+  }
+
+  // Check optional AI
+  const apiKey = process.env.GEMINI_API_KEY;
+  const aiConfigured = Boolean(apiKey && apiKey.trim().length > 0);
+  checks['gemini_ai'] = {
+    id: 'gemini_ai',
+    name: 'Gemini Geointelligence AI',
+    type: 'optional',
+    status: aiConfigured ? 'PASS' : 'OPTIONAL_UNAVAILABLE',
+    model: aiConfigured ? DEFAULT_GEMINI_MODEL : 'none',
+    message: aiConfigured ? 'AI ANALYSIS OPERATIONAL' : 'AI ANALYSIS OPTIONAL / NOT CONFIGURED'
+  };
+
+  const coreTotal = coreFeeds.length;
+  const optionalUnavailable = aiConfigured ? 0 : 1;
+  const overall = failed > 0 ? (corePassed >= 5 ? 'DEGRADED' : 'FAIL') : (corePassed === coreTotal ? 'PASS' : 'DEGRADED');
+
+  let commit = 'latest';
+  try {
+    const gitHead = path.join(process.cwd(), '.git', 'HEAD');
+    if (fs.existsSync(gitHead)) {
+      const headContent = fs.readFileSync(gitHead, 'utf8').trim();
+      if (headContent.startsWith('ref: ')) {
+        const refPath = path.join(process.cwd(), '.git', headContent.substring(5));
+        if (fs.existsSync(refPath)) {
+          commit = fs.readFileSync(refPath, 'utf8').trim().substring(0, 7);
+        }
+      } else {
+        commit = headContent.substring(0, 7);
+      }
+    }
+  } catch {}
+
+  return res.json({
+    overall,
+    corePassed,
+    coreTotal,
+    optionalUnavailable,
+    failed,
+    commit,
+    checkedAt: new Date().toISOString(),
+    checks
+  });
+});
+
 // Server-Side Gemini Geointelligence Situation Briefing
 app.post('/api/gemini/briefing', async (req, res) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    if (!apiKey || !apiKey.trim()) {
       return res.status(503).json({
         success: false,
-        error: 'GEMINI_API_KEY is not configured in the workspace environment.'
+        status: 'NOT_CONFIGURED',
+        optional: true,
+        model: DEFAULT_GEMINI_MODEL,
+        error: 'AI intelligence provider is optional / NOT CONFIGURED'
       });
     }
 
@@ -2690,7 +2792,7 @@ Guidelines:
 3. Keep the tone concise, authoritative, analytical, and actionable. Avoid generic fluff.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: DEFAULT_GEMINI_MODEL,
       contents: prompt
     });
 
@@ -2700,7 +2802,7 @@ Guidelines:
       success: true,
       briefing: briefingText,
       generated_at: new Date().toISOString(),
-      model: 'gemini-3.8-flash'
+      model: DEFAULT_GEMINI_MODEL
     });
   } catch (err: any) {
     console.error('Gemini briefing error:', err.message);
@@ -2715,10 +2817,11 @@ Guidelines:
 app.post('/api/gemini/query', async (req, res) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(400).json({
+    if (!apiKey || !apiKey.trim()) {
+      return res.status(503).json({
         success: false,
-        error: 'GEMINI_API_KEY is not configured in workspace environment secrets.'
+        status: 'NOT_CONFIGURED',
+        error: 'AI ANALYSIS OPTIONAL / NOT CONFIGURED'
       });
     }
 
@@ -2752,7 +2855,7 @@ Current Live Telemetry Context:
 - Macro Commodities: ${JSON.stringify(contextData?.macro || [])}`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: DEFAULT_GEMINI_MODEL,
       contents: prompt,
       config: {
         systemInstruction
@@ -2762,7 +2865,7 @@ Current Live Telemetry Context:
     return res.json({
       success: true,
       answer: response.text || 'No response generated.',
-      model: 'gemini-3.8-flash',
+      model: DEFAULT_GEMINI_MODEL,
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {
@@ -2778,10 +2881,11 @@ Current Live Telemetry Context:
 app.post('/api/gemini/analyze-target', async (req, res) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(400).json({
+    if (!apiKey || !apiKey.trim()) {
+      return res.status(503).json({
         success: false,
-        error: 'GEMINI_API_KEY is not configured in environment.'
+        status: 'NOT_CONFIGURED',
+        error: 'AI ANALYSIS OPTIONAL / NOT CONFIGURED'
       });
     }
 
@@ -2810,14 +2914,14 @@ Provide:
 4. [STRATEGIC SUMMARY]: 1-2 sentence executive takeaway.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: DEFAULT_GEMINI_MODEL,
       contents: prompt
     });
 
     return res.json({
       success: true,
       analysis: response.text || 'No analysis generated.',
-      model: 'gemini-3.8-flash',
+      model: DEFAULT_GEMINI_MODEL,
       timestamp: new Date().toISOString()
     });
   } catch (err: any) {

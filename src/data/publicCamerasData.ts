@@ -19,7 +19,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     source_url: 'https://www.youtube.com/watch?v=H-3c_rZ2h4A',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 1,
     description: 'High-definition 24/7 panoramic optical surveillance of the world-famous Shibuya Scramble pedestrian crossing in Tokyo, Japan.',
     adapter: 'server/transport_camera_adapter'
@@ -42,7 +42,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     source_url: 'https://www.youtube.com/watch?v=V4lR9A1V6jI',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 1,
     description: 'Continuous optical marine surveillance watching vaporetti, water taxis, and gondolas navigating the iconic Grand Canal by the Rialto Bridge.',
     adapter: 'server/transport_camera_adapter'
@@ -65,7 +65,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     source_url: 'https://www.abbeyroad.com/crossing',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 1,
     description: 'World-famous optical pedestrian and traffic crossing feed outside Abbey Road Studios in Westminster, London.',
     adapter: 'server/transport_camera_adapter'
@@ -88,7 +88,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     source_url: 'https://www.earthcam.com/usa/newyork/timessquare/?cam=tsrobo1',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 1,
     description: 'Live 4K surveillance overlooking the bustling pedestrian concourse and vehicular corridor of Father Duffy Square in Midtown Manhattan.',
     adapter: 'server/transport_camera_adapter'
@@ -111,7 +111,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     source_url: 'https://www.kouwan.metro.tokyo.lg.jp',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 1,
     description: 'Real-time video feed monitoring navigation channels under Tokyo Rainbow Bridge and the Yurikamome rail transit loop.',
     adapter: 'server/transport_camera_adapter'
@@ -134,7 +134,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     source_url: 'https://www.nasa.gov/multimedia/nasatv/iss_ustream.html',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 1,
     description: 'Orbital live video cameras mounted on the International Space Station looking down at Earth from 420 km altitude.',
     adapter: 'server/transport_camera_adapter'
@@ -154,7 +154,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://cwwp2.dot.ca.gov',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 30,
     description: 'Official Caltrans CCTV camera monitoring real-time westbound traffic flow approaching the San Francisco-Oakland Bay Bridge toll gantry.',
     adapter: 'server/transport_camera_adapter'
@@ -174,7 +174,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://cwwp2.dot.ca.gov',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 30,
     description: 'Caltrans surveillance feed overlooking Interstate 405 through the critical Sepulveda Pass artery in Los Angeles County.',
     adapter: 'server/transport_camera_adapter'
@@ -194,7 +194,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://511ny.org',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 15,
     description: 'NYC Traffic Management Center public camera monitoring pedestrian and vehicular circulation through Midtown Manhattan.',
     adapter: 'server/transport_camera_adapter'
@@ -214,7 +214,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://511ny.org',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 20,
     description: 'Busiest motor vehicle bridge in the world carrying I-95 / US-1 across the Hudson River between Manhattan and Fort Lee, NJ.',
     adapter: 'server/transport_camera_adapter'
@@ -234,7 +234,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://tfl.gov.uk/traffic/status/',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 45,
     description: 'Official TfL JamCam live feed monitoring vehicular and maritime bascule movements at Tower Bridge across the River Thames.',
     adapter: 'server/transport_camera_adapter'
@@ -254,7 +254,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://tfl.gov.uk/traffic/status/',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 45,
     description: 'TfL JamCam feed overlooking Westminster Bridge and Parliament Square traffic junctions in central London.',
     adapter: 'server/transport_camera_adapter'
@@ -274,7 +274,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://www.livetraffic.com',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 60,
     description: 'Government road agency camera monitoring Sydney Harbour Bridge deck and Bradfield Highway circulation in Sydney, Australia.',
     adapter: 'server/transport_camera_adapter'
@@ -294,7 +294,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://multimedia.panama-canal.com/',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 30,
     description: 'Official maritime transit webcam watching Panamax and Neopanamax vessels transiting the Pacific lock chamber.',
     adapter: 'server/transport_camera_adapter'
@@ -314,7 +314,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://multimedia.panama-canal.com/',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 30,
     description: 'Public canal operations camera overlooking the 3-stage flight of locks lifting vessels between the Atlantic and Lake Gatun.',
     adapter: 'server/transport_camera_adapter'
@@ -334,7 +334,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://www.kouwan.metro.tokyo.lg.jp',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 60,
     description: 'Public municipal camera monitoring navigation channels under the Rainbow Bridge and the Yurikamome transit corridor.',
     adapter: 'server/transport_camera_adapter'
@@ -354,7 +354,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://uym.ibb.gov.tr',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 30,
     description: 'Public transit camera watching maritime tankers and bulk carriers navigating the Bosphorus strait between Europe and Asia.',
     adapter: 'server/transport_camera_adapter'
@@ -374,7 +374,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     sourceUrl: 'https://cotrip.org',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 45,
     description: 'Highest vehicular tunnel in North America carrying Interstate 70 through the Continental Divide at 11,158 feet elevation.',
     adapter: 'server/transport_camera_adapter'
@@ -397,7 +397,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     source_url: 'https://multimedia.panama-canal.com',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 1,
     description: 'Continuous high-definition live optical surveillance overlooking Neopanamax vessels transiting the Pacific entrance of the Panama Canal.',
     adapter: 'server/transport_camera_adapter'
@@ -420,7 +420,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     source_url: 'https://www.earthcam.com',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 1,
     description: 'Live 4K optical surveillance overlooking the Horseshoe Falls and the US-Canadian international border river gorge.',
     adapter: 'server/transport_camera_adapter'
@@ -443,7 +443,7 @@ export const PUBLIC_CAMERAS_DATA: PublicCameraRecord[] = [
     source_url: 'https://www.miamibeachfl.gov',
     fetched_at: '2024-06-01T00:00:00.000Z',
     last_verified_at: '2024-06-01T00:00:00.000Z',
-    status: 'UNKNOWN',
+    status: 'REGISTERED',
     freshness_seconds: 1,
     description: 'Live optical surveillance along Ocean Drive overlooking South Beach Atlantic beachfront and coastal weather patterns.',
     adapter: 'server/transport_camera_adapter'

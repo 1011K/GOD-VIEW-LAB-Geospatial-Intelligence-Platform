@@ -350,6 +350,7 @@ const VideoFeedTile: React.FC<VideoFeedTileProps> = ({
           <div className={`w-2 h-2 rounded-full flex-none ${
             camera.status === 'LIVE' ? 'bg-emerald-500 animate-pulse' :
             (camera.status as string) === 'REACHABLE' ? 'bg-cyan-400' :
+            camera.status === 'REGISTERED' ? 'border border-cyan-400 bg-transparent' :
             camera.status === 'UNAVAILABLE' || camera.status === 'OFFLINE' ? 'bg-rose-500' :
             'bg-amber-500'
           }`} />
@@ -359,13 +360,25 @@ const VideoFeedTile: React.FC<VideoFeedTileProps> = ({
           <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex-none uppercase">
             {camera.stream_type || camera.media_type}
           </span>
-          <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700 flex-none">
+          <span className="text-[9px] px-1 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700 flex-none">
             {camera.status}
           </span>
         </div>
 
         {/* Quick Channel Dropdown & Actions */}
         <div className="flex items-center space-x-1.5 flex-none relative">
+          {directLink && (
+            <a
+              href={directLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1 rounded bg-slate-800/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-700 text-[10px]"
+              title="Open Direct Upstream Access Point"
+            >
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
+
           {onPromoteToHero && (
             <button
               onClick={onPromoteToHero}

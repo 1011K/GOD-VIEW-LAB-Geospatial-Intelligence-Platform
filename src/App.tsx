@@ -16,7 +16,19 @@ import { SurveillanceWall } from './components/SurveillanceWall';
 import { AiAnalystDrawer } from './components/AiAnalystDrawer';
 import { ArgosSearchBar } from './components/ArgosSearchBar';
 import { CompanyIntelligenceDrawer } from './components/CompanyIntelligenceDrawer';
+import { CesiumGodView } from './components/CesiumGodView';
 import { calculateSatellitePosition } from './services/satellitePropagator';
+import { 
+  fetchAircraftProvider, 
+  fetchSatellitesProvider, 
+  fetchSeismicProvider, 
+  fetchHazardsProvider, 
+  fetchInfrastructureProvider, 
+  fetchCamerasProvider, 
+  fetchVesselsProvider, 
+  fetchNewsProvider, 
+  fetchMacroProvider 
+} from './services/providers';
 import { 
   AircraftRecord, 
   SatelliteRecord, 
@@ -683,6 +695,87 @@ export default function App() {
               radarFrames={radarMetadata?.frames || []}
               currentRadarFrame={radarFramePath}
               setCurrentRadarFrame={setRadarFramePath}
+            />
+
+            {/* Floating Toggle Button (When layers panel is collapsed) */}
+            {!isLayersOpen && (
+              <button
+                onClick={() => setIsLayersOpen(true)}
+                className="absolute top-20 left-4 z-20 flex items-center space-x-2 px-3 py-2 rounded-xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 font-mono text-xs shadow-xl backdrop-blur-md hover:bg-slate-900 transition-all"
+              >
+                <Layers className="w-4 h-4 text-cyan-400" />
+                <span>Show Layers</span>
+              </button>
+            )}
+
+            {/* Layer Control Switchboard Panel */}
+            <LayerControlPanel
+              layers={layers}
+              setLayers={setLayers}
+              activeCounts={{
+                flights: flights.length,
+                satellites: satellites.length,
+                earthquakes: filteredEarthquakes.length,
+                wildfires: wildfires.length,
+                news: news.length,
+                infrastructure: infrastructure.length,
+                cameras: cameras.length,
+                vessels: vessels.length,
+                companies: companies.length
+              }}
+              minQuakeMag={minQuakeMag}
+              setMinQuakeMag={setMinQuakeMag}
+              satelliteGroup={satelliteGroup}
+              setSatelliteGroup={setSatelliteGroup}
+              sourcesHealth={sourcesHealth}
+              isOpen={isLayersOpen}
+              onToggleOpen={() => setIsLayersOpen(!isLayersOpen)}
+              onDockSideMap={() => setIsSideMapOpen(true)}
+            />
+
+            {/* Floating Live Cam HUD Toggle Button (When closed) */}
+            {!isIntelOpen && (
+              <button
+                onClick={() => setIsIntelOpen(true)}
+                className="absolute bottom-4 left-4 z-20 flex items-center space-x-2 px-3 py-2 rounded-xl bg-slate-950/90 border border-cyan-500/40 text-cyan-300 font-mono text-xs shadow-xl backdrop-blur-md hover:bg-slate-900 transition-all"
+              >
+                <Video className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <span className="font-bold">Surveillance Cams ({cameras.length})</span>
+              </button>
+            )}
+
+            {/* Draggable Tactical Surveillance & Multi-Domain Intel HUD */}
+            <LiveCameraWidget
+              cameras={cameras}
+              macro={macro}
+              news={news}
+              earthquakes={filteredEarthquakes}
+              wildfires={wildfires}
+              onSelectObject={setSelectedObject}
+              isOpen={isIntelOpen}
+              onClose={() => setIsIntelOpen(false)}
+              onOpenSurveillanceWall={() => setViewMode('surveillance-wall')}
+              onDockSideMap={() => setIsSideMapOpen(true)}
+            />
+          </div>
+        )}
+
+        {/* VIEW 1B: CESIUMJS 3D GOD VIEW ORBITAL GLOBE */}
+        {viewMode === '3d-globe' && (
+          <div className="relative w-full h-full flex flex-col overflow-hidden">
+            <CesiumGodView
+              flights={flights}
+              satellites={satellites}
+              earthquakes={filteredEarthquakes}
+              wildfires={wildfires}
+              infrastructure={infrastructure}
+              cameras={cameras}
+              vessels={vessels}
+              layerToggles={layers}
+              selectedObject={selectedObject}
+              onSelectObject={setSelectedObject}
+              radarMetadata={radarMetadata}
+              simTime={simTime}
             />
 
             {/* Floating Toggle Button (When layers panel is collapsed) */}

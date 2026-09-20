@@ -572,13 +572,22 @@ export function LiveCameraWidget({
 
                 {/* CCTV Tactical Overlay Elements */}
                 <div className="absolute top-2 left-2 flex items-center space-x-1.5 px-2 py-0.5 rounded bg-slate-950/80 border border-cyan-500/30 text-[9px] text-cyan-300 backdrop-blur-sm pointer-events-none">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    activeCam.status === 'LIVE' ? 'bg-emerald-500 animate-pulse' :
+                    activeCam.status === 'REACHABLE' ? 'bg-cyan-400' :
+                    activeCam.status === 'REGISTERED' ? 'border border-cyan-400 bg-transparent' :
+                    'bg-rose-500'
+                  }`} />
                   <span className="font-bold">{activeCam.stream_type === 'youtube' ? 'LIVE VIDEO' : 'LIVE CCTV'}</span>
                   <span className="text-slate-400">|</span>
                   <span>{activeCam.region}</span>
+                  <span className="text-cyan-400 font-mono">({activeCam.latitude.toFixed(3)}°, {activeCam.longitude.toFixed(3)}°)</span>
                 </div>
 
                 <div className="absolute top-2 right-2 flex items-center space-x-1 px-2 py-0.5 rounded bg-slate-950/80 border border-cyan-500/30 text-[9px] text-slate-300 backdrop-blur-sm pointer-events-none">
+                  <span className="text-[8px] px-1 py-0.2 rounded bg-slate-800 text-slate-300 uppercase font-mono">
+                    {activeCam.status}
+                  </span>
                   <span className="text-slate-400">{activeCam.freshness_seconds <= 1 ? 'Continuous Stream' : `${activeCam.freshness_seconds}s interval`}</span>
                 </div>
 
@@ -587,22 +596,23 @@ export function LiveCameraWidget({
                     {activeCam.name}
                   </div>
                   <div className="flex items-center space-x-1.5 flex-shrink-0">
-                    {activeCam.source_url && (
+                    {(activeCam.source_url || activeCam.sourceUrl) && (
                       <a
-                        href={activeCam.source_url}
+                        href={activeCam.source_url || activeCam.sourceUrl}
                         target="_blank"
                         rel="noreferrer"
                         title="Open upstream source stream in new tab"
-                        className="text-slate-400 hover:text-cyan-300"
+                        className="text-slate-400 hover:text-cyan-300 flex items-center gap-0.5 px-1 py-0.5 rounded bg-slate-900 border border-slate-700 text-[9px]"
                       >
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink className="w-2.5 h-2.5" />
+                        <span>SOURCE ACCESS</span>
                       </a>
                     )}
                     <button
                       onClick={() => onSelectObject(activeCam)}
-                      className="text-cyan-400 hover:text-cyan-200 font-bold flex items-center gap-0.5"
+                      className="text-cyan-400 hover:text-cyan-200 font-bold flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-800 text-[9px]"
                     >
-                      <MapPin className="w-3 h-3" />
+                      <MapPin className="w-2.5 h-2.5" />
                       <span>FLY TO</span>
                     </button>
                   </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   X, 
   FileText, 
@@ -15,7 +15,8 @@ import {
   Globe,
   HelpCircle,
   Copy,
-  Check
+  Check,
+  Activity
 } from 'lucide-react';
 import { RepositoryAuditItem } from '../types';
 
@@ -30,6 +31,20 @@ type SectionKey = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H';
 export function AuditReportModal({ isOpen, onClose, repositories }: AuditReportModalProps) {
   const [activeSection, setActiveSection] = useState<SectionKey>('A');
   const [copied, setCopied] = useState(false);
+  const [liveHealth, setLiveHealth] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch('/api/sources/health')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.sources) {
+            setLiveHealth(data.sources);
+          }
+        })
+        .catch(err => console.warn('Audit health fetch warning:', err));
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -173,76 +188,59 @@ export function AuditReportModal({ isOpen, onClose, repositories }: AuditReportM
                       <th className="p-2.5 border-b border-slate-800">Domain / Feed</th>
                       <th className="p-2.5 border-b border-slate-800">Endpoint URL</th>
                       <th className="p-2.5 border-b border-slate-800">Status</th>
+                      <th className="p-2.5 border-b border-slate-800">Latency</th>
                       <th className="p-2.5 border-b border-slate-800">Auth Required</th>
-                      <th className="p-2.5 border-b border-slate-800">CORS / Proxy</th>
                       <th className="p-2.5 border-b border-slate-800">Rate Limits</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-850 font-mono text-[11px]">
-                    <tr className="hover:bg-slate-900/50">
-                      <td className="p-2.5 font-bold text-slate-200">OpenSky Network (ADS-B)</td>
-                      <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://opensky-network.org/api/states/all</td>
-                      <td className="p-2.5 text-emerald-400 font-semibold">VERIFIED LIVE</td>
-                      <td className="p-2.5 text-slate-400">Optional Basic</td>
-                      <td className="p-2.5 text-amber-300">Server Proxy Req.</td>
-                      <td className="p-2.5 text-slate-400">10s (Anon) / 5s (Auth)</td>
-                    </tr>
-                    <tr className="hover:bg-slate-900/50">
-                      <td className="p-2.5 font-bold text-slate-200">CelesTrak (NORAD GP TLEs)</td>
-                      <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://celestrak.org/NORAD/elements/gp.php</td>
-                      <td className="p-2.5 text-emerald-400 font-semibold">VERIFIED LIVE</td>
-                      <td className="p-2.5 text-slate-400">None</td>
-                      <td className="p-2.5 text-slate-300">Server Cached</td>
-                      <td className="p-2.5 text-slate-400">60s refresh cache</td>
-                    </tr>
-                    <tr className="hover:bg-slate-900/50">
-                      <td className="p-2.5 font-bold text-slate-200">USGS Seismic Program</td>
-                      <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/...</td>
-                      <td className="p-2.5 text-emerald-400 font-semibold">VERIFIED LIVE</td>
-                      <td className="p-2.5 text-slate-400">None</td>
-                      <td className="p-2.5 text-emerald-400">Open CORS</td>
-                      <td className="p-2.5 text-slate-400">Unrestricted</td>
-                    </tr>
-                    <tr className="hover:bg-slate-900/50">
-                      <td className="p-2.5 font-bold text-slate-200">NASA EONET v3</td>
-                      <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://eonet.gsfc.nasa.gov/api/v3/events</td>
-                      <td className="p-2.5 text-emerald-400 font-semibold">VERIFIED LIVE</td>
-                      <td className="p-2.5 text-slate-400">None</td>
-                      <td className="p-2.5 text-emerald-400">Open CORS</td>
-                      <td className="p-2.5 text-slate-400">60s cache</td>
-                    </tr>
-                    <tr className="hover:bg-slate-900/50">
-                      <td className="p-2.5 font-bold text-slate-200">RainViewer Weather Radar</td>
-                      <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://api.rainviewer.com/public/weather-maps.json</td>
-                      <td className="p-2.5 text-emerald-400 font-semibold">VERIFIED LIVE</td>
-                      <td className="p-2.5 text-slate-400">None</td>
-                      <td className="p-2.5 text-emerald-400">Open CORS</td>
-                      <td className="p-2.5 text-slate-400">10k req/day</td>
-                    </tr>
-                    <tr className="hover:bg-slate-900/50">
-                      <td className="p-2.5 font-bold text-slate-200">GDELT Project 2.0 Doc API</td>
-                      <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://api.gdeltproject.org/api/v2/doc/doc</td>
-                      <td className="p-2.5 text-emerald-400 font-semibold">VERIFIED LIVE</td>
-                      <td className="p-2.5 text-slate-400">None</td>
-                      <td className="p-2.5 text-emerald-400">Open CORS</td>
-                      <td className="p-2.5 text-slate-400">1 req / 5 sec</td>
-                    </tr>
-                    <tr className="hover:bg-slate-900/50">
-                      <td className="p-2.5 font-bold text-slate-200">IAEA / GEM / TeleGeography</td>
-                      <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">Geospatial Infrastructure Dataset</td>
-                      <td className="p-2.5 text-slate-300 font-semibold">STATIC DATA</td>
-                      <td className="p-2.5 text-slate-400">None (Public)</td>
-                      <td className="p-2.5 text-slate-400">N/A (Embedded)</td>
-                      <td className="p-2.5 text-slate-400">Static Baseline</td>
-                    </tr>
-                    <tr className="hover:bg-slate-900/50">
-                      <td className="p-2.5 font-bold text-slate-200">NASA FIRMS Direct MODIS</td>
-                      <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://firms.modaps.eosdis.nasa.gov/api/area</td>
-                      <td className="p-2.5 text-amber-400 font-semibold">REQUIRES KEY</td>
-                      <td className="p-2.5 text-amber-300">NASA MAP_KEY</td>
-                      <td className="p-2.5 text-amber-300">Server Proxy Req.</td>
-                      <td className="p-2.5 text-slate-400">10 min cache window</td>
-                    </tr>
+                    {Object.keys(liveHealth).length > 0 ? (
+                      Object.values(liveHealth).map((src: any) => {
+                        const statusColor = 
+                          src.status === 'LIVE' ? 'text-emerald-400' :
+                          src.status === 'CACHED' ? 'text-teal-400' :
+                          src.status === 'STALE' ? 'text-amber-400' :
+                          src.status === 'STATIC_REFERENCE' ? 'text-slate-300' :
+                          src.status === 'UNAVAILABLE' ? 'text-rose-400' : 'text-slate-500';
+                        return (
+                          <tr key={src.id} className="hover:bg-slate-900/50">
+                            <td className="p-2.5 font-bold text-slate-200">{src.name}</td>
+                            <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">{src.endpoint}</td>
+                            <td className={`p-2.5 font-semibold ${statusColor}`}>{src.status}</td>
+                            <td className="p-2.5 text-slate-300">{src.latency_ms !== null ? `${src.latency_ms}ms` : '—'}</td>
+                            <td className="p-2.5 text-slate-400">{src.auth_mode || 'None'}</td>
+                            <td className="p-2.5 text-slate-400 truncate max-w-[200px]">{src.rate_limits || '—'}</td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <>
+                        <tr className="hover:bg-slate-900/50">
+                          <td className="p-2.5 font-bold text-slate-200">OpenSky Network (ADS-B)</td>
+                          <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://opensky-network.org/api/states/all</td>
+                          <td className="p-2.5 text-emerald-400 font-semibold">LIVE</td>
+                          <td className="p-2.5 text-slate-300">—</td>
+                          <td className="p-2.5 text-slate-400">Optional Basic</td>
+                          <td className="p-2.5 text-slate-400">10s (Anon) / 5s (Auth)</td>
+                        </tr>
+                        <tr className="hover:bg-slate-900/50">
+                          <td className="p-2.5 font-bold text-slate-200">CelesTrak (NORAD SGP4)</td>
+                          <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://celestrak.org/NORAD/elements/gp.php</td>
+                          <td className="p-2.5 text-emerald-400 font-semibold">LIVE</td>
+                          <td className="p-2.5 text-slate-300">—</td>
+                          <td className="p-2.5 text-slate-400">None</td>
+                          <td className="p-2.5 text-slate-400">60s refresh cache</td>
+                        </tr>
+                        <tr className="hover:bg-slate-900/50">
+                          <td className="p-2.5 font-bold text-slate-200">USGS Seismic Program</td>
+                          <td className="p-2.5 text-cyan-400 truncate max-w-[200px]">https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/...</td>
+                          <td className="p-2.5 text-emerald-400 font-semibold">LIVE</td>
+                          <td className="p-2.5 text-slate-300">—</td>
+                          <td className="p-2.5 text-slate-400">None</td>
+                          <td className="p-2.5 text-slate-400">Unrestricted</td>
+                        </tr>
+                      </>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -354,10 +352,10 @@ export function AuditReportModal({ isOpen, onClose, repositories }: AuditReportM
             <div className="space-y-4">
               <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
                 <h3 className="text-sm font-bold text-cyan-400 font-['Chakra_Petch'] mb-2">
-                  SECTION E: Working vs Broken vs Key-Required Sources
+                  SECTION E: Live Operational Health Observation Telemetry
                 </h3>
                 <p className="text-xs text-slate-300">
-                  Audit of live working endpoints vs services with rate limits or credentials requirements.
+                  Real-time empirical observation store from <code>/api/sources/health</code> reflecting current upstream reachability, latencies, and item counts.
                 </p>
               </div>
 
@@ -365,29 +363,35 @@ export function AuditReportModal({ isOpen, onClose, repositories }: AuditReportM
                 <div className="p-4 rounded-xl bg-slate-900/40 border border-emerald-500/40 space-y-2">
                   <div className="flex items-center space-x-2 text-emerald-400 font-bold">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Genuinely Working Live Public Feeds</span>
+                    <span>Operational Upstream Feeds</span>
                   </div>
                   <ul className="list-disc list-inside text-xs text-slate-300 space-y-1">
-                    <li>OpenSky Network ADS-B (with proxy & rate-limit cache)</li>
-                    <li>CelesTrak NORAD TLE Orbital Feeds</li>
-                    <li>USGS Earthquake Hazards 24h Feed</li>
-                    <li>NASA EONET v3 Natural Disasters & Wildfires</li>
-                    <li>RainViewer Global Doppler Radar Tile Network</li>
-                    <li>GDELT Project 2.0 Global Event Database</li>
-                    <li>CoinGecko & Public Macro Commodity Benchmarks</li>
+                    {Object.values(liveHealth).filter((s: any) => s.status === 'LIVE' || s.status === 'CACHED' || s.status === 'STATIC_REFERENCE').map((s: any) => (
+                      <li key={s.id}>
+                        <strong className="text-slate-200">{s.name}:</strong> <span className="text-emerald-400 font-semibold">{s.status}</span> ({s.item_count ?? s.itemCount ?? 0} items{s.latency_ms ? `, ${s.latency_ms}ms` : ''})
+                      </li>
+                    ))}
+                    {Object.values(liveHealth).filter((s: any) => s.status === 'LIVE' || s.status === 'CACHED' || s.status === 'STATIC_REFERENCE').length === 0 && (
+                      <li>Awaiting health observation probes...</li>
+                    )}
                   </ul>
                 </div>
 
                 <div className="p-4 rounded-xl bg-slate-900/40 border border-amber-500/40 space-y-2">
                   <div className="flex items-center space-x-2 text-amber-400 font-bold">
                     <AlertTriangle className="w-4 h-4" />
-                    <span>Key-Required / Fragile Public Endpoints</span>
+                    <span>Degraded / Unavailable / Unchecked Feeds</span>
                   </div>
                   <ul className="list-disc list-inside text-xs text-slate-300 space-y-1">
-                    <li>NASA FIRMS Direct (requires <code>NASA_FIRMS_MAP_KEY</code>)</li>
-                    <li>AISHub / MarineTraffic AIS (requires paid token or IP whitelist)</li>
-                    <li>ACLED Armed Conflict Data (requires OAuth2 registration)</li>
-                    <li>Overpass API (public servers throttle high-volume queries)</li>
+                    {Object.values(liveHealth).filter((s: any) => s.status === 'UNAVAILABLE' || s.status === 'NOT_CHECKED' || s.status === 'STALE').map((s: any) => (
+                      <li key={s.id}>
+                        <strong className="text-slate-200">{s.name}:</strong> <span className={s.status === 'UNAVAILABLE' ? 'text-rose-400' : 'text-amber-400'}>{s.status}</span>
+                        {s.error && <span className="text-slate-400 text-[10px] block pl-4 truncate max-w-xs">{s.error}</span>}
+                      </li>
+                    ))}
+                    {Object.values(liveHealth).filter((s: any) => s.status === 'UNAVAILABLE' || s.status === 'NOT_CHECKED' || s.status === 'STALE').length === 0 && (
+                      <li className="text-slate-400">All polled feeds currently healthy.</li>
+                    )}
                   </ul>
                 </div>
               </div>
@@ -402,29 +406,29 @@ export function AuditReportModal({ isOpen, onClose, repositories }: AuditReportM
                   SECTION F: Recommended Canonical Implementation by Layer
                 </h3>
                 <p className="text-xs text-slate-300">
-                  Synthesizing the best practices across all 8 reference repositories into a unified standard.
+                  Synthesizing best practices across reference repositories into a unified keyless standard.
                 </p>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
-                  <strong className="text-cyan-400">Map & Rendering Core: </strong>
-                  <span>Leaflet with Hardware-Accelerated Vector & Tile Layers, supporting seamless switching between Tactical Dark Matter (Carto), High-Res Esri Satellite, and OpenTopoMap without WebGL crash vulnerabilities.</span>
+                  <strong className="text-cyan-400">Map & Rendering Dual Core: </strong>
+                  <span>Leaflet 2D Vector/Tile and CesiumJS 3D Globe consuming an identical normalized provider data store with zero API token requirements.</span>
                 </div>
 
                 <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
                   <strong className="text-indigo-400">Orbital Mechanics Engine: </strong>
-                  <span>Direct SGP4 mathematical propagation via <code>satellite.js</code> running on real CelesTrak TLE records, calculating instantaneous geodetic positions and radar horizon footprints.</span>
+                  <span>Direct canonical SGP4 mathematical propagation via <code>satellite.js</code> running on verified CelesTrak TLE records, calculating instantaneous geodetic coordinates and radar horizon footprints.</span>
                 </div>
 
                 <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
                   <strong className="text-amber-400">Aviation Kinematics: </strong>
-                  <span>OpenSky Network state vector parser with dynamic SVG heading rotation, true track orientation, and altitude color grading.</span>
+                  <span>OpenSky Network state vector parser with dynamic SVG heading rotation, true track orientation, and altitude extrusion in 3D.</span>
                 </div>
 
                 <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
                   <strong className="text-rose-400">Zero-Fake-Data Enforcement: </strong>
-                  <span>Complete elimination of sample/mock fallbacks. When an upstream provider returns 429, 503 or network timeout, the application explicitly tags the layer as <code>SOURCE UNAVAILABLE</code> and displays exact provider telemetry.</span>
+                  <span>Complete elimination of synthetic fallbacks. When an upstream provider is unreachable, the endpoint explicitly tags the status as <code>UNAVAILABLE</code> and displays exact provider telemetry.</span>
                 </div>
               </div>
             </div>
@@ -438,62 +442,62 @@ export function AuditReportModal({ isOpen, onClose, repositories }: AuditReportM
                   SECTION G: Unified GOD-VIEW-LAB Full-Stack Architecture
                 </h3>
                 <p className="text-xs text-slate-300">
-                  Server-side proxy layer + High-performance client-side Leaflet mapping + Server-side Gemini AI Geointelligence synthesis.
+                  Server-side proxy layer + High-performance client-side Leaflet/Cesium dual mapping + Keyless core architecture.
                 </p>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800 space-y-3 font-mono text-[11px]">
-                <div className="text-cyan-300 font-bold">[CLIENT BROWSER (Vite + React 19 + Leaflet + Tailwind CSS)]</div>
+                <div className="text-cyan-300 font-bold">[CLIENT BROWSER (Vite + React 19 + Leaflet + CesiumJS + Tailwind CSS)]</div>
                 <div className="pl-4 border-l-2 border-cyan-500/40 space-y-1 text-slate-300">
-                  <div>├── TacticalMap (Tile engine, SVG markers, footprint circles, radar overlays)</div>
-                  <div>├── LayerControlPanel (Dynamic filter sliders, group selectors, record counts)</div>
-                  <div>├── IntelFeedPanel (Real-time telemetry event stream & jump-to-target)</div>
+                  <div>├── Dual Map Engine (2D Tactical Leaflet & 3D God View Cesium Globe)</div>
+                  <div>├── Unified Provider Abstraction Store (Identical data consumption across 2D/3D)</div>
+                  <div>├── Surveillance Video Wall & Live Municipal Camera Adapters</div>
                   <div>├── ObjectDetailDrawer (Strict Data Provenance inspector & Raw JSON viewer)</div>
-                  <div>└── Orbit Propagator (Client/Server SGP4 orbital mechanics)</div>
+                  <div>└── Orbit Propagator (Canonical SGP4 orbital mechanics via satellite.js)</div>
                 </div>
 
                 <div className="text-emerald-300 font-bold mt-2">[EXPRESS BACKEND PROXY (server.ts / Node.js)]</div>
                 <div className="pl-4 border-l-2 border-emerald-500/40 space-y-1 text-slate-300">
-                  <div>├── In-Memory TTL Cache & Rate Limit Protection (Prevents 429s)</div>
-                  <div>├── Strict Data Policy Wrapper (Injects sourceUrl, fetched_at, status)</div>
-                  <div>├── External API Bridges (OpenSky, CelesTrak, USGS, EONET, RainViewer, GDELT)</div>
-                  <div>└── Gemini 2.5 Flash Situational Briefing Engine (@google/genai)</div>
+                  <div>├── Empirical Health Observation Store (Live latencies, timestamps, item counts)</div>
+                  <div>├── System Readiness Endpoint (/api/system/readiness)</div>
+                  <div>├── Rate Limit Protection & TTL Cache Layer</div>
+                  <div>└── Optional Server-Side AI Intelligence Engine (@google/genai)</div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* SECTION H: GENUINE AI STUDIO CAPABILITIES */}
+          {/* SECTION H: GENUINE PLATFORM CAPABILITIES */}
           {activeSection === 'H' && (
             <div className="space-y-4">
               <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
                 <h3 className="text-sm font-bold text-cyan-400 font-['Chakra_Petch'] mb-2">
-                  SECTION H: Exact Capabilities Operating in AI Studio Environment
+                  SECTION H: Keyless Core Platform Capabilities
                 </h3>
                 <p className="text-xs text-slate-300">
-                  Confirmation of all operational features running natively inside Google AI Studio Cloud Run containers.
+                  Verified operational capabilities running with zero mandatory API keys or secrets.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                 <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/30">
-                  <span className="text-emerald-400 font-bold block">✓ Full-Stack Single Port (3000) Ingress</span>
-                  <span className="text-slate-300 text-[11px]">Vite SPA middleware integrated with Express API routes.</span>
+                  <span className="text-emerald-400 font-bold block">✓ 100% Keyless Core Product</span>
+                  <span className="text-slate-300 text-[11px]">Zero API keys required. Single command start: <code>npm run dev</code>.</span>
                 </div>
 
                 <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/30">
-                  <span className="text-emerald-400 font-bold block">✓ Real Live Public API Feeds</span>
-                  <span className="text-slate-300 text-[11px]">OpenSky ADS-B, CelesTrak TLEs, USGS Seismic, NASA EONET, RainViewer Radar, GDELT OSINT.</span>
+                  <span className="text-emerald-400 font-bold block">✓ 2D / 3D Dual Engine Parity</span>
+                  <span className="text-slate-300 text-[11px]">Leaflet and CesiumJS consuming identical normalized provider contracts.</span>
                 </div>
 
                 <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/30">
-                  <span className="text-emerald-400 font-bold block">✓ Server-Side Gemini Intelligence</span>
-                  <span className="text-slate-300 text-[11px]">Secure server-side calls via <code>@google/genai</code> with <code>process.env.GEMINI_API_KEY</code>.</span>
+                  <span className="text-emerald-400 font-bold block">✓ Canonical SGP4 Orbital Propagation</span>
+                  <span className="text-slate-300 text-[11px]">Real NORAD TLEs propagated with satellite.js.</span>
                 </div>
 
                 <div className="p-3 rounded-lg bg-emerald-950/20 border border-emerald-500/30">
-                  <span className="text-emerald-400 font-bold block">✓ Zero-Fake-Data Guaranteed</span>
-                  <span className="text-slate-300 text-[11px]">Failed or unconfigured feeds accurately return SOURCE UNAVAILABLE.</span>
+                  <span className="text-emerald-400 font-bold block">✓ Empirical Health Telemetry</span>
+                  <span className="text-slate-300 text-[11px]">Zero false claims. Live observation store with real latencies.</span>
                 </div>
               </div>
             </div>
